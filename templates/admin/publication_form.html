@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if publication else 'Add' }} Publication - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem;
+        }
+
+        .admin-header {
+            margin-bottom: 2rem;
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .form-container {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group label .required {
+            color: #ef4444;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: var(--font-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: var(--bg-primary);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .file-input-label:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-primary);
+        }
+
+        .file-input-label i {
+            margin-right: 0.5rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .btn-cancel {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg-tertiary);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <span class="logo-text">MD ROKIBUL HASAN</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
+                <li><a href="{{ url_for('admin_logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i>
+                        Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-{{ 'edit' if publication else 'plus' }}"></i> {{ 'Edit' if publication else 'Add' }}
+                Publication</h1>
+            <div class="breadcrumb">
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a> /
+                <a href="{{ url_for('admin_publications') }}">Publications</a> /
+                {{ 'Edit' if publication else 'Add' }}
+            </div>
+        </div>
+
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Title <span class="required">*</span></label>
+                    <input type="text" id="title" name="title" value="{{ publication.title if publication else '' }}"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="authors">Authors <span class="required">*</span></label>
+                    <input type="text" id="authors" name="authors"
+                        value="{{ publication.authors if publication else '' }}" required>
+                    <small>Separate multiple authors with commas</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="venue">Venue/Journal</label>
+                    <input type="text" id="venue" name="venue" value="{{ publication.venue if publication else '' }}">
+                    <small>e.g., IEEE Transactions, Conference Name</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="year">Year <span class="required">*</span></label>
+                    <input type="number" id="year" name="year" value="{{ publication.year if publication else '' }}"
+                        min="1900" max="2100" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="citations">Citations</label>
+                    <input type="number" id="citations" name="citations"
+                        value="{{ publication.citations if publication else 0 }}" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="abstract">Abstract</label>
+                    <textarea id="abstract" name="abstract"
+                        rows="6">{{ publication.abstract if publication else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="doi">DOI</label>
+                    <input type="text" id="doi" name="doi" value="{{ publication.doi if publication else '' }}">
+                    <small>e.g., 10.1109/EXAMPLE.2024.123456</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="google_scholar_url">Google Scholar URL</label>
+                    <input type="url" id="google_scholar_url" name="google_scholar_url"
+                        value="{{ publication.google_scholar_url if publication else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Research Areas</label>
+                    <div class="checkbox-group">
+                        {% for area in research_areas %}
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="area_{{ area.id }}" name="research_areas" value="{{ area.id }}"
+                                {% if publication and area in publication.research_areas %}checked{% endif %}>
+                            <label for="area_{{ area.id }}">{{ area.name }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="pdf_url">PDF URL</label>
+                    <input type="url" id="pdf_url" name="pdf_url"
+                        value="{{ publication.pdf_url if publication else '' }}"
+                        placeholder="https://scholar.google.com/scholar?oi=bibs&cluster=...">
+                    <small>Direct link to PDF (automatically filled when importing from Google Scholar)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="thumbnail">Thumbnail Image</label>
+                    <div class="file-input-wrapper">
+                        <label for="thumbnail" class="file-input-label">
+                            <i class="fas fa-image"></i> Choose Image
+                        </label>
+                        <input type="file" id="thumbnail" name="thumbnail" accept="image/*">
+                    </div>
+                    {% if publication and publication.thumbnail %}
+                    <small>Current file: {{ publication.thumbnail }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Update' if publication else 'Add' }} Publication
+                    </button>
+                    <a href="{{ url_for('admin_publications') }}" class="btn btn-cancel">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Show selected thumbnail file name
+        document.getElementById('thumbnail').addEventListener('change', function (e) {
+            const label = document.querySelector('label[for="thumbnail"]');
+            if (e.target.files.length > 0) {
+                label.innerHTML = '<i class="fas fa-image"></i> ' + e.target.files[0].name;
+            }
+        });
+    </script>
+</body>
+
+</html>

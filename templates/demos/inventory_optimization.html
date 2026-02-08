@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}AI Inventory Optimization - MD ROKIBUL HASAN{% endblock %}
+
+{% block content %}
+<!-- Demo Header -->
+<section class="demo-header">
+    <div class="container">
+        <div class="demo-breadcrumb">
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+        </div>
+        <h1 class="demo-page-title">AI Inventory Optimization Tool</h1>
+        <p class="demo-page-subtitle">
+            Comprehensive inventory analysis with demand forecasting (ETS + LightGBM), (s,S) policy optimization,
+            simulation, and model explainability
+        </p>
+        <div class="demo-meta-info">
+            <span class="demo-tag"><i class="fas fa-tag"></i> Optimization</span>
+            <a href="{{ url_for('publication_detail', pub_id=21) }}" class="demo-research-link">
+                <i class="fas fa-file-alt"></i> View Related Research
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Tool Section -->
+<section class="demo-tool-section">
+    <div class="container">
+        <div class="demo-grid">
+            <!-- Left Panel - Configuration -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-sliders-h"></i> Configuration</h2>
+                </div>
+                <div class="panel-content">
+                    <form id="inventoryForm">
+                        <!-- SKU Selection -->
+                        <div class="form-group">
+                            <label for="skuSelect">Select SKU</label>
+                            <select id="skuSelect" name="sku_id" class="form-control" required>
+                                <option value="">-- Choose a product --</option>
+                                {% for sku in skus %}
+                                <option value="{{ sku }}">{{ sku }}</option>
+                                {% endfor %}
+                            </select>
+                            <small>Choose a product to analyze</small>
+                        </div>
+
+                        <!-- Forecast Horizon -->
+                        <div class="form-group">
+                            <label for="forecastDays">
+                                Forecast Horizon: <span id="forecastDaysValue">28</span> days
+                            </label>
+                            <input type="range" id="forecastDays" name="forecast_days" min="7" max="56" value="28"
+                                class="slider">
+                            <small>Number of days to forecast</small>
+                        </div>
+
+                        <!-- Lead Time -->
+                        <div class="form-group">
+                            <label for="leadTime">
+                                Lead Time: <span id="leadTimeValue">7</span> days
+                            </label>
+                            <input type="range" id="leadTime" name="lead_time" min="1" max="30" value="7"
+                                class="slider">
+                            <small>Days between ordering and receiving products</small>
+                        </div>
+
+                        <!-- Service Level -->
+                        <div class="form-group">
+                            <label for="serviceLevel">
+                                Service Level: <span id="serviceLevelValue">95</span>%
+                            </label>
+                            <input type="range" id="serviceLevel" name="service_level" min="80" max="99" value="95"
+                                step="1" class="slider">
+                            <small>Target probability of not stocking out</small>
+                        </div>
+
+                        <!-- Simulation Days -->
+                        <div class="form-group">
+                            <label for="simDays">
+                                Simulation Period: <span id="simDaysValue">90</span> days
+                            </label>
+                            <input type="range" id="simDays" name="sim_days" min="30" max="365" value="90"
+                                class="slider">
+                            <small>Period to simulate inventory performance</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" id="analyzeBtn">
+                            <i class="fas fa-calculator"></i> Run Analysis
+                        </button>
+                    </form>
+
+                    <!-- Info Box -->
+                    <div class="info-box">
+                        <h4><i class="fas fa-info-circle"></i> About This Tool</h4>
+                        <p>This comprehensive tool provides:</p>
+                        <ul>
+                            <li><strong>Historical Analysis</strong>: Demand statistics and trends</li>
+                            <li><strong>Forecasting</strong>: ETS and LightGBM predictions</li>
+                            <li><strong>Inventory Policy</strong>: Optimal (s,S) parameters</li>
+                            <li><strong>Simulation</strong>: Test policy performance</li>
+                            <li><strong>Explainability</strong>: SHAP analysis and surrogate models</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Summary Results -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-chart-bar"></i> Analysis Summary</h2>
+                </div>
+                <div class="panel-content">
+                    <div id="loadingState" class="loading-state" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Running comprehensive analysis...</p>
+                    </div>
+
+                    <div id="errorState" class="error-state" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p id="errorMessage"></p>
+                    </div>
+
+                    <div id="resultsState" class="results-state" style="display: none;">
+                        <!-- Summary Content -->
+                        <div id="summaryContent"></div>
+                    </div>
+
+                    <div id="initialState" class="initial-state">
+                        <i class="fas fa-boxes"></i>
+                        <p>Select a SKU and configure parameters to begin analysis</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Full-Width Charts Section -->
+<section class="demo-tool-section">
+    <div class="container">
+        <div id="resultsCharts" class="full-width-charts" style="display: none;">
+            <div class="charts-header-container">
+                <h2 class="section-title">Detailed Visualizations</h2>
+                <div class="results-tabs">
+                    <button class="tab-btn active" data-tab="historical">
+                        <i class="fas fa-history"></i> Historical
+                    </button>
+                    <button class="tab-btn" data-tab="forecasting">
+                        <i class="fas fa-chart-line"></i> Forecasting
+                    </button>
+                    <button class="tab-btn" data-tab="policy">
+                        <i class="fas fa-boxes"></i> Policy
+                    </button>
+                    <button class="tab-btn" data-tab="simulation">
+                        <i class="fas fa-play-circle"></i> Simulation
+                    </button>
+                    <button class="tab-btn" data-tab="explainability">
+                        <i class="fas fa-brain"></i> Explainability
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="historicalTab"></div>
+            <div class="tab-content" id="forecastingTab"></div>
+            <div class="tab-content" id="policyTab"></div>
+            <div class="tab-content" id="simulationTab"></div>
+            <div class="tab-content" id="explainabilityTab"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Methodology Section -->
+<section class="how-it-works-section">
+    <div class="container">
+        <h2 class="section-title">Methodology (Based on Research)</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Historical Analysis</h3>
+                <p>Comprehensive demand statistics, distribution metrics, and time series visualization to understand
+                    patterns</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Demand Forecasting</h3>
+                <p>Dual approach: ETS (statistical) and LightGBM (ML) models with MAE, RMSE, and MAPE metrics</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Policy Optimization</h3>
+                <p>(s,S) inventory policy calculation with configurable lead time and service level parameters</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h3>Simulation</h3>
+                <p>Test inventory policy performance with stockout detection and order frequency analysis</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">5</div>
+                <h3>Explainability</h3>
+                <p>SHAP analysis for feature importance and surrogate linear models for interpretability</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/inventory.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/inventory.js') }}"></script>
+{% endblock %}

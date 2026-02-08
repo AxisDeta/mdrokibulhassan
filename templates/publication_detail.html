@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}{{ publication.title }} - MD ROKIBUL HASAN{% endblock %}
+
+{% block content %}
+<!-- Publication Detail Section -->
+<section class="publication-detail-section">
+    <div class="container">
+        <div class="publication-detail">
+            <div class="pub-header">
+                <span class="pub-year-badge">{{ publication.year }}</span>
+                <h1 class="pub-detail-title">{{ publication.title }}</h1>
+                <p class="pub-authors">{{ publication.authors }}</p>
+
+                {% if publication.venue %}
+                <p class="pub-venue"><i class="fas fa-book-open"></i> {{ publication.venue }}</p>
+                {% endif %}
+
+                <div class="pub-meta">
+                    <span class="meta-item">
+                        <i class="fas fa-quote-right"></i> {{ publication.citations }} citations
+                    </span>
+                    {% if publication.research_areas %}
+                    <span class="meta-item">
+                        <i class="fas fa-tags"></i>
+                        {% for area in publication.research_areas %}
+                        <span class="area-tag">{{ area.name }}</span>
+                        {% endfor %}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if publication.abstract %}
+            <div class="pub-section">
+                <h2>Abstract</h2>
+                <p class="pub-abstract">{{ publication.abstract }}</p>
+            </div>
+            {% endif %}
+
+            <div class="pub-actions">
+                {% if publication.pdf_url %}
+                <a href="{{ publication.pdf_url }}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-file-pdf"></i> View PDF
+                </a>
+                {% endif %}
+
+                {% if publication.google_scholar_url %}
+                <a href="{{ publication.google_scholar_url }}" target="_blank" class="btn btn-secondary">
+                    <i class="fas fa-graduation-cap"></i> View on Google Scholar
+                </a>
+                {% endif %}
+
+                {% if publication.doi %}
+                <a href="https://doi.org/{{ publication.doi }}" target="_blank" class="btn btn-secondary">
+                    <i class="fas fa-link"></i> DOI: {{ publication.doi }}
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="pub-back">
+                <a href="{{ url_for('publications') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Publications
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .publication-detail-section {
+        padding: 8rem 0 4rem;
+        min-height: 100vh;
+    }
+
+    .publication-detail {
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--bg-primary);
+        padding: 3rem;
+        border-radius: 16px;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .pub-header {
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .pub-year-badge {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .pub-detail-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+        line-height: 1.3;
+    }
+
+    .pub-authors {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .pub-venue {
+        font-size: 1rem;
+        color: var(--text-tertiary);
+        font-style: italic;
+        margin-bottom: 1.5rem;
+    }
+
+    .pub-meta {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .area-tag {
+        display: inline-block;
+        background: var(--bg-secondary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        margin-left: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .pub-section {
+        margin-bottom: 2rem;
+    }
+
+    .pub-section h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .pub-abstract {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--text-secondary);
+    }
+
+    .pub-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .pub-back {
+        padding-top: 2rem;
+        border-top: 2px solid var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+        .publication-detail {
+            padding: 2rem 1.5rem;
+        }
+
+        .pub-detail-title {
+            font-size: 1.75rem;
+        }
+    }
+</style>
+{% endblock %}

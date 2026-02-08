@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import from Google Scholar - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem;
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .import-container {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .info-box {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .info-box h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box ul {
+            margin-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: var(--font-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: var(--bg-primary);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-cancel {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results-box {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+
+        .results-box h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .result-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item.success {
+            color: #10b981;
+        }
+
+        .result-item.skip {
+            color: var(--text-tertiary);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <span class="logo-text">MD ROKIBUL HASAN</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
+                <li><a href="{{ url_for('admin_logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i>
+                        Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3>Importing Publications...</h3>
+            <p>This may take a few moments. Please wait.</p>
+        </div>
+    </div>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-download"></i> Import from Google Scholar</h1>
+            <div class="breadcrumb">
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a> /
+                <a href="{{ url_for('admin_publications') }}">Publications</a> /
+                Import
+            </div>
+        </div>
+
+        <div class="import-container">
+            <div class="info-box">
+                <h3><i class="fas fa-info-circle"></i> How to Import</h3>
+                <p>Enter your Google Scholar profile URL to automatically import all your publications.</p>
+                <ul>
+                    <li>Go to your Google Scholar profile</li>
+                    <li>Copy the URL from your browser (e.g., https://scholar.google.com/citations?user=YOUR_ID)</li>
+                    <li>Paste it below and click "Import Publications"</li>
+                    <li>The system will extract all publications with titles, authors, venues, years, and citations</li>
+                    <li>Duplicate publications will be automatically skipped</li>
+                </ul>
+            </div>
+
+            <form method="POST" id="importForm">
+                <div class="form-group">
+                    <label for="scholar_url">Google Scholar Profile URL <span style="color: #ef4444;">*</span></label>
+                    <input type="url" id="scholar_url" name="scholar_url"
+                        value="{{ scholar_url if scholar_url else 'https://scholar.google.com/citations?user=jic1XEcAAAAJ&hl=en' }}"
+                        placeholder="https://scholar.google.com/citations?user=YOUR_ID" required>
+                    <small>Example: https://scholar.google.com/citations?user=jic1XEcAAAAJ&hl=en</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Import Publications
+                    </button>
+                    <a href="{{ url_for('admin_publications') }}" class="btn btn-cancel">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+
+            {% if results %}
+            <div class="results-box">
+                <h3><i class="fas fa-check-circle"></i> Import Results</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    <strong>Total Found:</strong> {{ results.total }} |
+                    <strong>Added:</strong> {{ results.added }} |
+                    <strong>Skipped:</strong> {{ results.skipped }}
+                </p>
+
+                {% if results.publications %}
+                <div style="max-height: 400px; overflow-y: auto;">
+                    {% for pub in results.publications %}
+                    <div class="result-item {{ 'success' if pub.status == 'added' else 'skip' }}">
+                        <i class="fas fa-{{ 'check' if pub.status == 'added' else 'minus' }}"></i>
+                        {{ pub.title[:80] }}{% if pub.title|length > 80 %}...{% endif %} ({{ pub.year }})
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        document.getElementById('importForm').addEventListener('submit', function () {
+            document.getElementById('loadingOverlay').classList.add('active');
+        });
+    </script>
+</body>
+
+</html>

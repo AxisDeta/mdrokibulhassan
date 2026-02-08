@@ -1,0 +1,198 @@
+/**
+ * Blockchain Retail Cybersecurity - Additional Styles
+ */
+
+/* Lab Tabs */
+.lab-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.lab-tab-btn {
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.lab-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.lab-content {
+    display: none;
+}
+
+.lab-content.active {
+    display: block;
+}
+
+/* Simulation Results */
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.summary-card.success {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.summary-card.success .summary-value {
+    color: #10b981;
+}
+
+.summary-card .summary-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.summary-card .summary-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+/* Log Container */
+.log-container {
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 1.25rem;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.85rem;
+    height: 250px;
+    overflow-y: auto;
+    border: 1px solid #30363d;
+}
+
+.log-entry {
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.25rem;
+}
+
+.log-entry.phishing {
+    color: #ff7b72;
+}
+
+.log-entry.legitimate {
+    color: #7ee787;
+}
+
+.log-entry .timestamp {
+    color: #8b949e;
+    margin-right: 0.5rem;
+}
+
+/* Blockchain Ledger */
+.integrity-badge {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.integrity-badge.valid {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid #10b981;
+}
+
+.integrity-badge.invalid {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.blockchain-chain {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.block-card {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s;
+}
+
+.block-card:hover {
+    transform: translateY(-5px);
+}
+
+.block-card::after {
+    content: '\f0c1';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    opacity: 0.5;
+}
+
+.block-card:last-child::after {
+    display: none;
+}
+
+.block-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.block-field {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+}
+
+.block-field label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.block-field span {
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    word-break: break-all;
+}

@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Sustainable Supply Chain Matrix - MD ROKIBUL HASAN{% endblock %}
+
+
+{% block content %}
+<!-- Demo Header -->
+<section class="demo-header">
+    <div class="container">
+        <div class="demo-breadcrumb">
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+        </div>
+        <h1 class="demo-page-title">Sustainable Supply Chain Matrix</h1>
+        <p class="demo-page-subtitle">
+            A supervised learning decision support tool comparing KNN, Naïve Bayes, Random Forest, and Neural Networks
+            for evaluating supply chain sustainability.
+        </p>
+        <div class="demo-meta-info">
+            <span class="demo-tag"><i class="fas fa-th"></i> Model Matrix</span>
+            <span class="demo-tag"><i class="fas fa-tshirt"></i> Fashion Supply Chain</span>
+            <span class="demo-tag"><i class="fas fa-check-double"></i> Multi-Classifier</span>
+            <a href="{{ url_for('publication_detail', pub_id=12) }}" class="demo-research-link">
+                <i class="fas fa-file-alt"></i> View Related Research
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Tool Section -->
+<section class="demo-tool-section">
+    <div class="container">
+        <div class="demo-grid">
+            <!-- Left Panel - Configuration -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-database"></i> Dataset Configuration</h2>
+                </div>
+                <div class="panel-content">
+                    <form id="matrixConfigForm">
+                        <div class="form-group">
+                            <label for="sampleSize">Dataset Size (Samples)</label>
+                            <input type="number" id="sampleSize" class="form-control" value="150" min="50" max="500">
+                            <small>Simulated fashion startup data (Supplier, Category, Type, etc.)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Target Variable</label>
+                            <div class="form-control disabled">Sustainability Rating (High/Med/Low)</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Models to Train</label>
+                            <div class="model-tags">
+                                <span class="model-tag">KNN</span>
+                                <span class="model-tag">Naïve Bayes</span>
+                                <span class="model-tag">Random Forest</span>
+                                <span class="model-tag">Neural Network</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-play"></i> Train Matrix Models
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Panel - Status View -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Status</h2>
+                </div>
+                <div class="panel-content"
+                    style="min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                    <div id="initialState" class="initial-state">
+                        <i class="fas fa-project-diagram"></i>
+                        <p>Configure and run the analysis to compare model performance.</p>
+                    </div>
+
+                    <div id="loadingState" class="loading-state" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Training 4 models on fashion dataset...</p>
+                    </div>
+
+                    <div id="completionState" style="display: none; text-align: center;">
+                        <i class="fas fa-check-circle"
+                            style="font-size: 3rem; color: var(--success-color); margin-bottom: 1rem;"></i>
+                        <h3>Analysis Complete</h3>
+                        <p>Scroll down to view detailed performance metrics and charts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Full Width Results Section -->
+<section class="demo-tool-section" id="resultsSection" style="display: none;">
+    <div class="container">
+        <!-- Metrics Cards -->
+        <h2 class="section-title">Model Performance Metrics</h2>
+        <div class="metrics-grid" id="metricsGrid">
+            <!-- Cards injected via JS -->
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <!-- Accuracy Chart (Row 1) -->
+            <div class="row" style="margin-bottom: 2rem;">
+                <div class="col-12">
+                    <div class="chart-section-card">
+                        <h3><i class="fas fa-chart-bar"></i> Accuracy Comparison</h3>
+                        <div class="chart-container">
+                            <div id="accuracyChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confusion Matrix (Row 2) -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="chart-section-card">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3><i class="fas fa-th"></i> Confusion Matrix</h3>
+                            <select id="cmModelSelect" class="form-control-sm" style="width: auto;">
+                                <option value="Random Forest">Random Forest</option>
+                                <option value="KNN">KNN</option>
+                                <option value="Naive Bayes">Naïve Bayes</option>
+                                <option value="Neural Network">Neural Network</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <div id="confusionMatrixChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Methodology Section (Standard Layout) -->
+<section class="how-it-works-section">
+    <div class="container">
+        <h2 class="section-title">Research Methodology</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Data Description</h3>
+                <p>
+                    Utilizing a 35-variable dataset from a Fashion & Beauty startup.
+                    Features include <em>Panel, Purchase, Dev/Proto, Gender, Category, and Supplier (A-G)</em>,
+                    comprising ~100 elements.
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Data Preprocessing</h3>
+                <p>
+                    Strategic noise handling and missing value imputation.
+                    Dataset split into <strong>80% training</strong> and <strong>20% testing</strong>.
+                    Categorical features processed via <strong>Label Encoding</strong> followed by <strong>One-Hot
+                        Encoding</strong>.
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Model Matrix</h3>
+                <p>
+                    A comparative analysis of four supervised classifiers:
+                    <strong>KNN</strong> (Manhattan distance),
+                    <strong>Naïve Bayes</strong> (Probabilistic),
+                    <strong>Random Forest</strong> (200 trees), and
+                    <strong>Neural Networks</strong> (Perceptron).
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Reuse Forecasting Styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
+<style>
+    .model-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .model-tag {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .matrix-selector {
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .metric-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: transform 0.2s;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+    }
+
+    .metric-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .metric-title {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .metric-score {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .methodology-scroll {
+        max-height: 250px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: var(--text-secondary);
+    }
+
+    .methodology-scroll p {
+        margin-bottom: 1rem;
+    }
+
+    .methodology-scroll strong {
+        color: var(--text-primary);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/matrix_optimizer.js') }}"></script>
+{% endblock %}

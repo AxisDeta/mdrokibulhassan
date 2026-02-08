@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}AI Carbon Footprint Optimizer - MD ROKIBUL HASAN{% endblock %}
+
+{% block content %}
+<!-- Demo Header -->
+<section class="demo-header">
+    <div class="container">
+        <div class="demo-breadcrumb">
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+        </div>
+        <h1 class="demo-page-title">Carbon Reduction Calculator</h1>
+        <p class="demo-page-subtitle">
+            ML-powered carbon reduction strategies using Random Forest, XGBoost, and Bagging models on Walmart Supply
+            Chain Data (2019-2021).
+        </p>
+        <div class="demo-meta-info">
+            <span class="demo-tag"><i class="fas fa-leaf"></i> Sustainability</span>
+            <span class="demo-tag"><i class="fas fa-database"></i> Walmart Data</span>
+            <span class="demo-tag"><i class="fas fa-project-diagram"></i> Random Forest (Best)</span>
+            <a href="{{ url_for('publication_detail', pub_id=13) }}" class="demo-research-link">
+                <i class="fas fa-file-alt"></i> View Related Research
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Tool Section -->
+<section class="demo-tool-section">
+    <div class="container">
+        <div class="demo-grid">
+            <!-- Left Panel - Configuration -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-sliders-h"></i> Operational Configuration</h2>
+                </div>
+                <div class="panel-content">
+                    <form id="carbonConfigForm">
+                        <div class="form-group">
+                            <label for="activityLevel">Industrial Activity Level (Index)</label>
+                            <input type="range" id="activityLevel" class="form-control-range" min="0" max="100"
+                                value="75" oninput="this.nextElementSibling.value = this.value">
+                            <output>75</output>
+                            <small>Operational intensity (0-100)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="energyConsumption">Energy Consumption (kWh)</label>
+                            <div class="input-with-label">
+                                <span><i class="fas fa-bolt"></i></span>
+                                <input type="number" id="energyConsumption" class="form-control" value="50000"
+                                    step="1000">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fuelType">Fuel Type</label>
+                            <select id="fuelType" class="form-control">
+                                <option value="Diesel">Diesel</option>
+                                <option value="Gasoline">Gasoline</option>
+                                <option value="Natural Gas">Natural Gas</option>
+                                <option value="Grid Electricity">Grid Electricity</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="weatherCondition">Weather Condition</label>
+                            <select id="weatherCondition" class="form-control">
+                                <option value="Sunny">Sunny</option>
+                                <option value="Rainy">Rainy</option>
+                                <option value="Snowy">Snowy</option>
+                                <option value="Extreme">Extreme</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-calculator"></i> Calculate Footprint
+                        </button>
+                    </form>
+
+                    <div class="info-box">
+                        <h4><i class="fas fa-info-circle"></i> Best Model: Random Forest</h4>
+                        <p>Outperformed XGBoost & Bagging:</p>
+                        <ul>
+                            <li><strong>Precision:</strong> 92.5% (vs 92.1% XGB)</li>
+                            <li><strong>AUC:</strong> 0.92 (Highest)</li>
+                            <li><strong>Error Rate:</strong> 0.075 (Lowest)</li>
+                            <li><strong>Speed:</strong> ~11.8ms (Fastest)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Dashboard Summary -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Sustainability Dashboard</h2>
+                </div>
+                <div class="panel-content">
+                    <div id="dashboardInitial" class="initial-state">
+                        <i class="fas fa-leaf"></i>
+                        <p>Configure inputs to predict carbon output and optimization strategies.</p>
+                    </div>
+
+                    <div id="dashboardLoading" class="loading-state" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Processing with Random Forest (Walmart Dataset)...</p>
+                    </div>
+
+                    <div id="dashboardResults" style="display: none;">
+                        <!-- Top Metrics -->
+                        <div class="stats-cards">
+                            <div class="stat-card-small">
+                                <div class="stat-label">Predicted Emission</div>
+                                <div id="totalEmissionsVal" class="stat-value metric-value">--</div>
+                                <div class="metric-unit">kg CO2</div>
+                            </div>
+                            <div class="stat-card-small">
+                                <div class="stat-label">Model Confidence</div>
+                                <div id="confidenceVal" class="stat-value metric-value">92.5%</div>
+                                <div class="metric-unit">Precision (RF)</div>
+                            </div>
+                            <div class="stat-card-small">
+                                <div class="stat-label">Reduction Potential</div>
+                                <div id="reductionVal" class="stat-value metric-value highlight">--</div>
+                                <div class="metric-unit">Optimized Strategy</div>
+                            </div>
+                        </div>
+
+                        <!-- ROC Curve -->
+                        <div class="chart-container-small">
+                            <div id="rocChart"></div>
+                        </div>
+
+                        <div class="optimization-lab">
+                            <button id="runScenarioBtn" class="btn btn-secondary btn-block">
+                                <i class="fas fa-chart-line"></i> View Detailed Model Comparison
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Full Width Charts Section -->
+<section class="demo-tool-section" id="detailedCharts" style="display: none;">
+    <div class="container">
+        <div class="chart-section-card">
+            <h3><i class="fas fa-chart-bar"></i> Algorithm Performance Comparison</h3>
+            <p class="chart-description">
+                Benchmarking Random Forest, Gradient Boosting (XGB), and Bagging classifiers on AUC, Precision, and
+                Execution Time.
+            </p>
+            <div class="chart-container-large">
+                <div id="comparisonChart"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it Works -->
+<section class="how-it-works-section">
+    <div class="container">
+        <h2 class="section-title">Research Methodology</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Data Collection</h3>
+                <p> Sourced 24 months (Apr 2019-2021) of Walmart US supply chain data: Activity, Energy, Fuel, and
+                    Weather.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Preprocessing</h3>
+                <p>Cleaned noise, treated outliers, imputed missing values. Applied 80:20 Train/Test split and 10-fold
+                    Cross-Validation.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Model Training</h3>
+                <p>Trained Random Forest, XGBoost, and Bagging. Random Forest proved superior (0.92 AUC, 11.8ms
+                    execution time).</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Include Base Forecasting Styles for Premium Look -->
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/carbon.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/carbon_optimizer.js') }}"></script>
+{% endblock %}

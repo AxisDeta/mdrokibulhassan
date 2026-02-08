@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Publications - MD ROKIBUL HASAN{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">Publications</h1>
+        <p class="page-subtitle">Research contributions in Supply Chain, Machine Learning, Big Data, and Business
+            Analytics</p>
+    </div>
+</section>
+
+<!-- Filters Section -->
+<section class="filters-section">
+    <div class="container">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="searchInput"><i class="fas fa-search"></i> Search</label>
+                <input type="text" id="searchInput" placeholder="Search publications..."
+                    value="{{ search_query or '' }}" onkeyup="if(event.key==='Enter') filterPublications()">
+            </div>
+
+            <div class="filter-group">
+                <label for="yearFilter"><i class="fas fa-calendar"></i> Year</label>
+                <select id="yearFilter" onchange="filterPublications()">
+                    <option value="">All Years</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if current_year==year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="areaFilter"><i class="fas fa-tag"></i> Research Area</label>
+                <select id="areaFilter" onchange="filterPublications()">
+                    <option value="">All Areas</option>
+                    {% for area in research_areas %}
+                    <option value="{{ area.id }}" {% if current_area==area.id %}selected{% endif %}>{{ area.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sortBy"><i class="fas fa-sort"></i> Sort By</label>
+                <select id="sortBy" onchange="filterPublications()">
+                    <option value="year" {% if sort_by=='year' %}selected{% endif %}>Year (Newest)</option>
+                    <option value="citations" {% if sort_by=='citations' %}selected{% endif %}>Citations</option>
+                    <option value="title" {% if sort_by=='title' %}selected{% endif %}>Title</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Publications List -->
+<section class="publications-list-section">
+    <div class="container">
+        {% if publications %}
+        <div class="publications-count">
+            <p>Showing {{ publications|length }} publication{{ 's' if publications|length != 1 else '' }}</p>
+        </div>
+
+        <div class="publications-list">
+            {% for pub in publications %}
+            <div class="publication-item animate-on-scroll">
+                <div class="pub-item-content">
+                    <div class="pub-item-header">
+                        <span class="pub-item-year">{{ pub.year }}</span>
+                        <span class="pub-item-citations"><i class="fas fa-quote-right"></i> {{ pub.citations }}</span>
+                    </div>
+
+                    <h3 class="pub-item-title">{{ pub.title }}</h3>
+                    <p class="pub-item-authors">{{ pub.authors }}</p>
+
+                    {% if pub.venue %}
+                    <p class="pub-item-venue"><i class="fas fa-book-open"></i> {{ pub.venue }}</p>
+                    {% endif %}
+
+                    {% if pub.abstract %}
+                    <p class="pub-item-abstract">{{ pub.abstract[:200] }}...</p>
+                    {% endif %}
+
+                    <div class="pub-item-actions">
+                        <a href="{{ url_for('publication_detail', pub_id=pub.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+
+                        {% if pub.pdf_url %}
+                        <a href="{{ pub.pdf_url }}" target="_blank" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                        {% endif %}
+
+                        {% if pub.google_scholar_url %}
+                        <a href="{{ pub.google_scholar_url }}" target="_blank" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-graduation-cap"></i> Scholar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>No publications found</h3>
+            <p>Try adjusting your filters or search query</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        padding: 10rem 0 4rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        text-align: center;
+    }
+
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .page-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .filters-section {
+        padding: 2rem 0;
+        background: var(--bg-secondary);
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .filter-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        transition: all var(--transition-fast);
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+
+    .publications-list-section {
+        padding: 3rem 0;
+    }
+
+    .publications-count {
+        margin-bottom: 2rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .publications-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .publication-item {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-normal);
+        border-left: 4px solid var(--primary-color);
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .publication-item.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .publication-item:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .pub-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .pub-item-year {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .pub-item-citations {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .pub-item-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .pub-item-authors {
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .pub-item-venue {
+        color: var(--text-tertiary);
+        font-style: italic;
+        margin-bottom: 1rem;
+    }
+
+    .pub-item-abstract {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+    }
+
+    .pub-item-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .no-results i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

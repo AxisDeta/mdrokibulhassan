@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Research Demos - MD ROKIBUL HASAN{% endblock %}
+
+{% block content %}
+<!-- Demos Header -->
+<section class="demos-header">
+    <div class="container">
+        <h1 class="demos-title animate-fade-in">Interactive Research Demos</h1>
+        <p class="demos-subtitle animate-fade-in-delay-1">
+            Explore practical applications of supply chain research through interactive tools and simulations
+        </p>
+    </div>
+</section>
+
+<!-- Demos Grid -->
+<section class="demos-section">
+    <div class="container">
+        <div class="demos-grid">
+            {% for demo in demos %}
+            <div class="demo-card {% if demo.status == 'coming_soon' %}coming-soon{% endif %}"
+                data-category="{{ demo.category }}">
+                <div class="demo-icon" style="background: {{ demo.color }}20; color: {{ demo.color }};">
+                    <i class="fas {{ demo.icon }}"></i>
+                </div>
+
+                <div class="demo-content">
+                    <h3 class="demo-title">{{ demo.title }}</h3>
+                    <p class="demo-description">{{ demo.description }}</p>
+
+                    <div class="demo-meta">
+                        <span class="demo-category">
+                            <i class="fas fa-tag"></i> {{ demo.category }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="demo-footer">
+                    {% if demo.status == 'active' %}
+                    <a href="{{ url_for('demos.' + demo.id.replace('-', '_')) }}" class="btn btn-primary btn-demo">
+                        <i class="fas fa-play"></i> Try Demo
+                    </a>
+                    {% else %}
+                    <span class="btn btn-secondary btn-demo disabled">
+                        <i class="fas fa-clock"></i> Coming Soon
+                    </span>
+                    {% endif %}
+
+                    <a href="{{ url_for('publication_detail', pub_id=demo.paper_id) }}" class="btn-link">
+                        <i class="fas fa-file-alt"></i> View Research
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .demos-header {
+        padding: 8rem 0 4rem;
+        text-align: center;
+        background: linear-gradient(135deg, var(--primary-color)10, var(--bg-secondary));
+    }
+
+    .demos-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+
+    .demos-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .demos-section {
+        padding: 4rem 0;
+    }
+
+    .demos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .demo-card {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-normal);
+        display: flex;
+        flex-direction: column;
+        border: 2px solid transparent;
+    }
+
+    .demo-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary-color);
+    }
+
+    .demo-card.coming-soon {
+        opacity: 0.7;
+    }
+
+    .demo-card.coming-soon:hover {
+        transform: none;
+        border-color: transparent;
+    }
+
+    .demo-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .demo-content {
+        flex: 1;
+    }
+
+    .demo-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .demo-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .demo-meta {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .demo-category {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-tertiary);
+        background: var(--bg-secondary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+    }
+
+    .demo-footer {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding-top: 1.5rem;
+        border-top: 2px solid var(--border-color);
+    }
+
+    .btn-demo {
+        flex: 1;
+    }
+
+    .btn-demo.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all var(--transition-fast);
+    }
+
+    .btn-link:hover {
+        color: var(--primary-hover);
+    }
+
+    @media (max-width: 768px) {
+        .demos-title {
+            font-size: 2rem;
+        }
+
+        .demos-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .demo-footer {
+            flex-direction: column;
+        }
+
+        .btn-demo {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}

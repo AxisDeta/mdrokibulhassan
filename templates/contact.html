@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Contact - MD ROKIBUL HASAN{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">Get in Touch</h1>
+        <p class="page-subtitle">Let's discuss research collaborations and opportunities</p>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="contact-section">
+    <div class="container">
+        <div class="contact-grid">
+            <!-- Contact Form -->
+            <div class="contact-form-container">
+                <h2>Send a Message</h2>
+                <form method="POST" class="contact-form" onsubmit="validateContactForm(event)">
+                    <div class="form-group">
+                        <label for="name">Name *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message *</label>
+                        <textarea id="message" name="message" rows="6" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </form>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="contact-info-container">
+                <h2>Contact Information</h2>
+
+                <div class="contact-info-card">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>Email</h4>
+                            <p>{{ profile.email if profile and profile.email else 'contact@example.com' }}</p>
+                        </div>
+                    </div>
+
+                    {% if profile and profile.phone %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>Phone</h4>
+                            <p>{{ profile.phone }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>Affiliation</h4>
+                            <p>{{ profile.affiliation if profile and profile.affiliation else 'Gannon University' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="social-connect">
+                    <h3>Connect on Social Media</h3>
+                    <div class="social-links-large">
+                        <a href="http://www.linkedin.com/in/faiaz-chowdhury" target="_blank"
+                            class="social-link linkedin">
+                            <i class="fab fa-linkedin"></i>
+                            <span>LinkedIn</span>
+                        </a>
+                        <a href="https://scholar.google.com/citations?user=j3B8Dz8AAAAJ&hl=en" target="_blank"
+                            class="social-link scholar">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Google Scholar</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contact-section {
+        padding: 4rem 0;
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 3rem;
+    }
+
+    .contact-form-container h2,
+    .contact-info-container h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .contact-form {
+        background: var(--bg-primary);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.875rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-family: var(--font-primary);
+        transition: all var(--transition-fast);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: var(--bg-primary);
+    }
+
+    .btn-block {
+        width: 100%;
+    }
+
+    .contact-info-card {
+        background: var(--bg-primary);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 2rem;
+    }
+
+    .info-item {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .info-content h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-primary);
+    }
+
+    .info-content p {
+        color: var(--text-secondary);
+    }
+
+    .social-connect {
+        background: var(--bg-primary);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+    }
+
+    .social-connect h3 {
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .social-links-large {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .social-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-normal);
+    }
+
+    .social-link i {
+        font-size: 1.5rem;
+    }
+
+    .social-link.linkedin {
+        background: #0077b5;
+        color: white;
+    }
+
+    .social-link.linkedin:hover {
+        background: #005885;
+        transform: translateX(5px);
+    }
+
+    .social-link.scholar {
+        background: #4285f4;
+        color: white;
+    }
+
+    .social-link.scholar:hover {
+        background: #1a73e8;
+        transform: translateX(5px);
+    }
+
+    @media (max-width: 968px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

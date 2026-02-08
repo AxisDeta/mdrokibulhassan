@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}MD ROKIBUL HASAN - Academic Portfolio | Supply Chain & Machine Learning{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-background"></div>
+    <div class="container hero-container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title animate-fade-in">
+                    <span class="name">MD ROKIBUL HASAN</span>
+                </h1>
+                <p class="hero-subtitle animate-fade-in-delay-1">
+                    MBA Business Analytics, Gannon University | Masters in Managerial Economics, University of Wroclaw
+                </p>
+                <p class="hero-description animate-fade-in-delay-2">
+                    Advancing research in Supply Chain, Machine Learning, Big Data, and Business Analytics with {{
+                    total_citations }} citations and {{ total_pubs }} publications
+                </p>
+                <div class="hero-cta animate-fade-in-delay-3">
+                    <a href="{{ url_for('publications') }}" class="btn btn-primary">
+                        <i class="fas fa-book"></i> View Publications
+                    </a>
+                    <a href="{{ url_for('contact') }}" class="btn btn-secondary">
+                        <i class="fas fa-envelope"></i> Get in Touch
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-image animate-fade-in-delay-1">
+                {% if profile and profile.profile_image %}
+                <img src="{{ url_for('static', filename='uploads/images/' + profile.profile_image) }}"
+                    alt="MD ROKIBUL HASAN" class="profile-img">
+                {% else %}
+                <div class="profile-placeholder">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card animate-on-scroll">
+                <div class="stat-icon">
+                    <i class="fas fa-quote-right"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" data-target="{{ profile.total_citations if profile else 295 }}">0</h3>
+                    <p class="stat-label">Citations</p>
+                </div>
+            </div>
+
+            <div class="stat-card animate-on-scroll">
+                <div class="stat-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" data-target="{{ total_pubs }}">0</h3>
+                    <p class="stat-label">Publications</p>
+                </div>
+            </div>
+
+            <div class="stat-card animate-on-scroll">
+                <div class="stat-icon">
+                    <i class="fas fa-h-square"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" data-target="{{ profile.h_index if profile else 7 }}">0</h3>
+                    <p class="stat-label">h-index</p>
+                </div>
+            </div>
+
+            <div class="stat-card animate-on-scroll">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number" data-target="{{ profile.i10_index if profile else 7 }}">0</h3>
+                    <p class="stat-label">i10-index</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Research Areas Section -->
+{% if research_areas %}
+<section class="research-areas-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Research Areas</h2>
+            <p class="section-subtitle">Exploring the intersection of business, data, and technology</p>
+        </div>
+
+        <div class="research-areas-grid">
+            {% for area in research_areas %}
+            <div class="research-area-card animate-on-scroll">
+                <div class="area-icon" style="background: {{ area.color or '#3b82f6' }}20;">
+                    <i class="{{ area.icon or 'fas fa-lightbulb' }}" style="color: {{ area.color or '#3b82f6' }};"></i>
+                </div>
+                <h3 class="area-name">{{ area.name }}</h3>
+                <p class="area-description">{{ area.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Interactive Demos Section -->
+<section class="demos-showcase-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Interactive Research Demos</h2>
+            <p class="section-subtitle">Explore practical applications of supply chain research through interactive
+                tools</p>
+        </div>
+
+        <div class="demos-showcase-grid">
+            <!-- Demo 1: AI Demand Forecasting -->
+            <a href="{{ url_for('demos.demand_forecasting') }}" class="demo-showcase-card animate-on-scroll">
+                <div class="demo-showcase-icon"
+                    style="background: linear-gradient(135deg, #3b82f620, #3b82f640); color: #3b82f6;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="demo-showcase-content">
+                    <h3 class="demo-showcase-title">AI Demand Forecasting</h3>
+                    <p class="demo-showcase-desc">Upload historical sales data and get AI-powered demand forecasts with
+                        multiple ML models</p>
+                    <div class="demo-showcase-footer">
+                        <span class="demo-badge demo-badge-active">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                        <span class="demo-link-text">
+                            Try it now <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Demo 2: Inventory Optimization -->
+            <a href="{{ url_for('demos.inventory_optimization') }}" class="demo-showcase-card animate-on-scroll">
+                <div class="demo-showcase-icon"
+                    style="background: linear-gradient(135deg, #10b98120, #10b98140); color: #10b981;">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="demo-showcase-content">
+                    <h3 class="demo-showcase-title">Inventory Optimization</h3>
+                    <p class="demo-showcase-desc">Calculate optimal inventory levels using AI to minimize costs while
+                        meeting demand</p>
+                    <div class="demo-showcase-footer">
+                        <span class="demo-badge demo-badge-active">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                        <span class="demo-link-text">
+                            Try it now <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Demo 3: Supplier Risk Assessment -->
+            <a href="{{ url_for('demos.supplier_risk') }}" class="demo-showcase-card animate-on-scroll">
+                <div class="demo-showcase-icon"
+                    style="background: linear-gradient(135deg, #f59e0b20, #f59e0b40); color: #f59e0b;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="demo-showcase-content">
+                    <h3 class="demo-showcase-title">Supplier Risk Assessment</h3>
+                    <p class="demo-showcase-desc">Evaluate and score supplier risk using data-driven AI models</p>
+                    <div class="demo-showcase-footer">
+                        <span class="demo-badge demo-badge-active">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                        <span class="demo-link-text">
+                            Try it now <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Demo 4: Blockchain Supply Chain Security -->
+            <a href="{{ url_for('demos.blockchain_security') }}" class="demo-showcase-card animate-on-scroll">
+                <div class="demo-showcase-icon"
+                    style="background: linear-gradient(135deg, #8b5cf620, #8b5cf640); color: #8b5cf6;">
+                    <i class="fas fa-link"></i>
+                </div>
+                <div class="demo-showcase-content">
+                    <h3 class="demo-showcase-title">Blockchain Security</h3>
+                    <p class="demo-showcase-desc">Visualize how blockchain enhances supply chain integrity and
+                        transaction
+                        security</p>
+                    <div class="demo-showcase-footer">
+                        <span class="demo-badge demo-badge-active">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                        <span class="demo-link-text">
+                            Try it now <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Demo 5: AI Carbon Footprint Optimizer -->
+            <a href="{{ url_for('demos.carbon_optimizer') }}" class="demo-showcase-card animate-on-scroll">
+                <div class="demo-showcase-icon"
+                    style="background: linear-gradient(135deg, #10b98120, #10b98140); color: #10b981;">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="demo-showcase-content">
+                    <h3 class="demo-showcase-title">Carbon Footprint Optimizer</h3>
+                    <p class="demo-showcase-desc">Calculate and optimize supply chain carbon emissions with AI
+                        recommendations</p>
+                    <div class="demo-showcase-footer">
+                        <span class="demo-badge demo-badge-active">
+                            <i class="fas fa-check-circle"></i> Active
+                        </span>
+                        <span class="demo-link-text">
+                            Try it now <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="demos-cta">
+            <a href="{{ url_for('demos.demos_landing') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-rocket"></i> Explore All Demos
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Publications Section -->
+{% if featured_publications %}
+<section class="featured-publications-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Featured Publications</h2>
+            <p class="section-subtitle">Recent impactful research contributions</p>
+        </div>
+
+        <div class="publications-grid">
+            {% for pub in featured_publications %}
+            <div class="publication-card animate-on-scroll">
+                {% if pub.thumbnail %}
+                <div class="pub-thumbnail">
+                    <img src="{{ url_for('static', filename='uploads/images/' + pub.thumbnail) }}"
+                        alt="{{ pub.title }}">
+                </div>
+                {% endif %}
+
+                <div class="pub-content">
+                    <span class="pub-year">{{ pub.year }}</span>
+                    <h3 class="pub-title">{{ pub.title }}</h3>
+                    <p class="pub-authors">{{ pub.authors }}</p>
+
+                    {% if pub.venue %}
+                    <p class="pub-venue"><i class="fas fa-book-open"></i> {{ pub.venue }}</p>
+                    {% endif %}
+
+                    <div class="pub-footer">
+                        <span class="pub-citations">
+                            <i class="fas fa-quote-right"></i> {{ pub.citations }} citations
+                        </span>
+                        <a href="{{ url_for('publication_detail', pub_id=pub.id) }}" class="pub-link">
+                            Read More <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="section-cta">
+            <a href="{{ url_for('publications') }}" class="btn btn-primary">
+                View All Publications <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title">Interested in Collaboration?</h2>
+            <p class="cta-description">
+                I'm always open to discussing research opportunities, collaborations, or consulting projects in Supply
+                Chain,
+                Machine Learning, and Business Analytics.
+            </p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('contact') }}" class="btn btn-light">
+                    <i class="fas fa-envelope"></i> Contact Me
+                </a>
+                <a href="https://scholar.google.com/citations?user=jic1XEcAAAAJ&hl=en" target="_blank"
+                    class="btn btn-outline-light">
+                    <i class="fas fa-graduation-cap"></i> Google Scholar
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animate statistics counters
+    document.addEventListener('DOMContentLoaded', function () {
+        const statNumbers = document.querySelectorAll('.stat-number');
+
+        const animateCounter = (element) => {
+            const target = parseInt(element.getAttribute('data-target'));
+            const duration = 2000;
+            const increment = target / (duration / 16);
+            let current = 0;
+
+            const updateCounter = () => {
+                current += increment;
+                if (current < target) {
+                    element.textContent = Math.floor(current);
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    element.textContent = target;
+                }
+            };
+
+            updateCounter();
+        };
+
+        // Intersection Observer for scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (entry.target.classList.contains('stat-number')) {
+                        animateCounter(entry.target);
+                    }
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        // Observe all animated elements
+        document.querySelectorAll('.animate-on-scroll, .stat-number').forEach(el => {
+            observer.observe(el);
+        });
+    });
+</script>
+{% endblock %}

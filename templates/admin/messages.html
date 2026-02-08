@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem;
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+        }
+
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message-card {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .message-card.unread {
+            border-left-color: var(--secondary-color);
+            background: var(--bg-secondary);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .message-from {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .message-email {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .message-date {
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+        }
+
+        .message-subject {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .message-body {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <span class="logo-text">MD ROKIBUL HASAN</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
+                <li><a href="{{ url_for('admin_logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i>
+                        Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-envelope"></i> Messages</h1>
+        </div>
+
+        {% if messages %}
+        <div class="messages-list">
+            {% for message in messages %}
+            <div class="message-card {% if not message.is_read %}unread{% endif %}">
+                <div class="message-header">
+                    <div>
+                        <div class="message-from">{{ message.name }}</div>
+                        <div class="message-email">{{ message.email }}</div>
+                    </div>
+                    <div class="message-date">
+                        {{ message.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                    </div>
+                </div>
+
+                {% if message.subject %}
+                <div class="message-subject">{{ message.subject }}</div>
+                {% endif %}
+
+                <div class="message-body">{{ message.message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-envelope-open"></i>
+            <h3>No messages yet</h3>
+            <p>Messages from the contact form will appear here</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

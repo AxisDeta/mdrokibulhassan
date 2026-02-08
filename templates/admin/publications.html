@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Publications - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+        }
+
+        .publications-table {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-secondary);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .pub-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            max-width: 400px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <span class="logo-text">MD ROKIBUL HASAN</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
+                <li><a href="{{ url_for('admin_logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i>
+                        Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-book"></i> Manage Publications</h1>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{{ url_for('admin_import_scholar') }}" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> Import from Scholar
+                </a>
+                <a href="{{ url_for('admin_add_publication') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Publication
+                </a>
+            </div>
+        </div>
+
+        {% if publications %}
+        <div class="publications-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Year</th>
+                        <th>Citations</th>
+                        <th>Authors</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pub in publications %}
+                    <tr>
+                        <td class="pub-title">{{ pub.title }}</td>
+                        <td>{{ pub.year }}</td>
+                        <td>{{ pub.citations }}</td>
+                        <td>{{ pub.authors[:50] }}{% if pub.authors|length > 50 %}...{% endif %}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('publication_detail', pub_id=pub.id) }}"
+                                    class="btn btn-sm btn-secondary" target="_blank">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{{ url_for('admin_edit_publication', pub_id=pub.id) }}"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form method="POST" action="{{ url_for('admin_delete_publication', pub_id=pub.id) }}"
+                                    style="display: inline;"
+                                    onsubmit="return confirm('Are you sure you want to delete this publication?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="publications-table">
+            <div class="empty-state">
+                <i class="fas fa-book"></i>
+                <h3>No publications yet</h3>
+                <p>Start by adding your first publication</p>
+                <a href="{{ url_for('admin_add_publication') }}" class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-plus"></i> Add Publication
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

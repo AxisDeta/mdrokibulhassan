@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Academic Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem 2rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-nav a {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .quick-actions {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .quick-actions h2 {
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all var(--transition-normal);
+        }
+
+        .action-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-btn i {
+            font-size: 1.5rem;
+        }
+
+        .recent-activity {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .recent-activity h2 {
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item strong {
+            color: var(--primary-color);
+        }
+
+        .activity-time {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <span class="logo-text">MD ROKIBUL HASAN</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('index') }}" class="nav-link">View Site</a></li>
+                <li><a href="{{ url_for('admin_logout') }}" class="nav-link"><i class="fas fa-sign-out-alt"></i>
+                        Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+            <span>Welcome, {{ current_user.username }}</span>
+        </div>
+
+        <!-- Admin Navigation -->
+        <div class="admin-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a>
+            <a href="{{ url_for('admin_publications') }}">Publications</a>
+            <a href="{{ url_for('admin_messages') }}">Messages</a>
+            <a href="{{ url_for('admin_profile') }}">Profile</a>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Publications</h3>
+                <div class="stat-value">{{ total_publications }}</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Citations</h3>
+                <div class="stat-value">{{ total_citations }}</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Unread Messages</h3>
+                <div class="stat-value">{{ unread_messages }}</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Research Areas</h3>
+                <div class="stat-value">{{ research_areas_count }}</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="action-buttons">
+                <a href="{{ url_for('admin_add_publication') }}" class="action-btn">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Add Publication</span>
+                </a>
+                <a href="{{ url_for('admin_import_scholar') }}" class="action-btn">
+                    <i class="fas fa-download"></i>
+                    <span>Import from Scholar</span>
+                </a>
+                <a href="{{ url_for('admin_publications') }}" class="action-btn">
+                    <i class="fas fa-book"></i>
+                    <span>Manage Publications</span>
+                </a>
+                <a href="{{ url_for('admin_messages') }}" class="action-btn">
+                    <i class="fas fa-envelope"></i>
+                    <span>View Messages</span>
+                </a>
+                <a href="{{ url_for('admin_profile') }}" class="action-btn">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Edit Profile</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+            <h2>Recent Publications</h2>
+            {% if recent_publications %}
+            <ul class="activity-list">
+                {% for pub in recent_publications %}
+                <li class="activity-item">
+                    <strong>{{ pub.title }}</strong>
+                    <div class="activity-time">
+                        {{ pub.year }} | {{ pub.citations }} citations
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--text-secondary);">No publications yet. <a
+                    href="{{ url_for('admin_add_publication') }}">Add your first publication</a></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

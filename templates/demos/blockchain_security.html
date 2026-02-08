@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Retail Cybersecurity - MD ROKIBUL HASAN{% endblock %}
+
+{% block content %}
+<!-- Demo Header -->
+<section class="demo-header">
+    <div class="container">
+        <div class="demo-breadcrumb">
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+        </div>
+        <h1 class="demo-page-title">Blockchain Retail Cybersecurity</h1>
+        <p class="demo-page-subtitle">
+            Securing the retail supply chain with immutable ledgers and automated phishing detection systems.
+        </p>
+        <div class="demo-meta-info">
+            <span class="demo-tag"><i class="fas fa-shield-alt"></i> Cybersecurity</span>
+            <span class="demo-tag"><i class="fas fa-link"></i> Blockchain</span>
+            <a href="{{ url_for('publication_detail', pub_id=17) }}" class="demo-research-link">
+                <i class="fas fa-file-alt"></i> View Related Research
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Demo Tool Section -->
+<section class="demo-tool-section">
+    <div class="container">
+        <div class="demo-grid">
+            <!-- Left Panel - Configuration & Lab -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-flask"></i> Security Labs</h2>
+                </div>
+                <div class="panel-content">
+                    <div class="lab-tabs">
+                        <button class="lab-tab-btn active" data-lab="simulation">Phishing Simulation</button>
+                        <button class="lab-tab-btn" data-lab="ledger">Interactive Ledger</button>
+                    </div>
+
+                    <!-- Phishing Simulation Lab -->
+                    <div id="simulationLab" class="lab-content active">
+                        <p class="lab-description">
+                            Replicate the 2,000-iteration experiment. Detect phishing attacks
+                            using Merseene Twister randomness.
+                        </p>
+                        <div class="form-group">
+                            <label>Iteration Count</label>
+                            <input type="number" class="form-control" value="2000" disabled>
+                            <small>Hardware-accelerated simulation of retail messaging.</small>
+                        </div>
+                        <button id="runSimulationBtn" class="btn btn-primary btn-block">
+                            <i class="fas fa-play"></i> Run 2,000 Iteration Simulation
+                        </button>
+                    </div>
+
+                    <!-- Interactive Ledger Lab -->
+                    <div id="ledgerLab" class="lab-content">
+                        <p class="lab-description">
+                            Manually add data to the blockchain and verify its integrity using SHA256 hashing.
+                        </p>
+                        <div class="form-group">
+                            <label for="blockData">Block Message</label>
+                            <textarea id="blockData" class="form-control" rows="3"
+                                placeholder="Enter supply chain data (e.g., Order #1234 Shipped)"></textarea>
+                        </div>
+                        <button id="addBlockBtn" class="btn btn-secondary btn-block">
+                            <i class="fas fa-plus-circle"></i> Add to Immutable Chain
+                        </button>
+                    </div>
+
+                    <div class="info-box">
+                        <h4><i class="fas fa-info-circle"></i> Security Methodology</h4>
+                        <p>This demo implements:</p>
+                        <ul>
+                            <li><strong>SHA256 Hashing</strong>: Ensures data immutability.</li>
+                            <li><strong>Integrity Proof</strong>: Message verification via chain history.</li>
+                            <li><strong>Mersenne Twister</strong>: High-quality randomness for attack simulation.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-microchip"></i> Real-time Results</h2>
+                </div>
+                <div class="panel-content">
+                    <div id="loadingState" class="loading-state" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Processing 2,000 iterations...</p>
+                    </div>
+
+                    <div id="resultsState" class="results-state" style="display: none;">
+                        <!-- Simulation Summary -->
+                        <div id="simulationSummary">
+                            <div class="summary-grid">
+                                <div class="summary-card success">
+                                    <div class="summary-label">Mitigation Rate</div>
+                                    <div class="summary-value">100%</div>
+                                </div>
+                                <div class="summary-card">
+                                    <div class="summary-label">Phishing Detected</div>
+                                    <div id="phishingCount" class="summary-value">0</div>
+                                </div>
+                            </div>
+                            <div id="simulationChart" style="height: 300px;"></div>
+
+                            <div class="recent-messages">
+                                <h5>Recent Detection Log</h5>
+                                <div id="messageLog" class="log-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Ledger View -->
+                        <div id="ledgerView" style="display: none;">
+                            <div id="chainIntegrity" class="integrity-badge valid">
+                                <i class="fas fa-check-circle"></i> Chain is Verified & Immutable
+                            </div>
+                            <div id="blockchainLedger" class="blockchain-chain">
+                                <!-- Blocks will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="initialState" class="initial-state">
+                        <i class="fas fa-link"></i>
+                        <p>Select a lab module to begin the cybersecurity demonstration.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Methodology Section -->
+<section class="how-it-works-section">
+    <div class="container">
+        <h2 class="section-title">Case Scenario: Phishing Mitigation</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-icon"><i class="fas fa-random"></i></div>
+                <h3>1. Random Generation</h3>
+                <p>Using Mersenne Twister to simulate 2,000 retail messages with ~50.75% malicious content.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon"><i class="fas fa-fingerprint"></i></div>
+                <h3>2. SHA256 Fingerprinting</h3>
+                <p>Each message is hashed into the blockchain. Any tampering breaks the cryptographic signatures.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon"><i class="fas fa-search-shield"></i></div>
+                <h3>3. Automated Detection</h3>
+                <p>System compares incoming message hashes against the verified vendor ledger to block unauthorized
+                    senders.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon"><i class="fas fa-user-check"></i></div>
+                <h3>4. 100% Mitigation</h3>
+                <p>As proved in the experiment, blockchain reduces the risk of phishing success to zero through
+                    verification.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/blockchain.css') }}">
+<style>
+    .lab-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .lab-tab-btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        background: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+    }
+
+    .lab-tab-btn.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+    }
+
+    .lab-content {
+        display: none;
+    }
+
+    .lab-content.active {
+        display: block;
+    }
+
+    .lab-description {
+        margin-bottom: 1.5rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        text-align: center;
+    }
+
+    .summary-card.success {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .summary-card .summary-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .log-container {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 8px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.85rem;
+        height: 200px;
+        overflow-y: auto;
+    }
+
+    .log-entry {
+        margin-bottom: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .log-entry.phishing {
+        color: #f87171;
+    }
+
+    .log-entry.legitimate {
+        color: #4ade80;
+    }
+
+    .integrity-badge {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .integrity-badge.valid {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid #10b981;
+    }
+
+    .integrity-badge.invalid {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid #ef4444;
+    }
+
+    .blockchain-chain {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .block-card {
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        position: relative;
+    }
+
+    .block-card::after {
+        content: '\f0c1';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        bottom: -1.25rem;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--border-color);
+        font-size: 1.2rem;
+    }
+
+    .block-card:last-child::after {
+        display: none;
+    }
+
+    .block-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+    }
+
+    .block-field {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .block-field label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        width: 100px;
+        display: inline-block;
+    }
+
+    .block-field span {
+        color: var(--text-primary);
+        font-family: monospace;
+        word-break: break-all;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/blockchain.js') }}"></script>
+{% endblock %}
