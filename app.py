@@ -512,9 +512,10 @@ def create_app(config_name='development'):
     app.register_blueprint(demos_bp)
     
     return app
+app = create_app()
 
 if __name__ == '__main__':
-    app = create_app()
+    app.run()
     
     with app.app_context():
         try:
@@ -542,11 +543,9 @@ if __name__ == '__main__':
     ]
     
     port = int(os.environ.get('PORT', 5000))
-    app.run(
-        debug=True, 
+    app.run( 
         host='0.0.0.0', 
         port=port,
         extra_files=[],  # Don't watch extra files
-        use_reloader=True,
         reloader_type='stat'  # Use stat reloader instead of watchdog (more stable)
     )
