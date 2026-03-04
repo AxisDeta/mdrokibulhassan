@@ -41,7 +41,7 @@ def create_app(config_name='development'):
         
         # Calculate statistics
         total_pubs = Publication.query.count()
-        total_citations = db.session.query(db.func.sum(Publication.citations)).scalar() or 0
+        total_citations = profile.total_citations if profile else 0
         
         return render_template('index.html', 
                              profile=profile,
@@ -221,21 +221,24 @@ def create_app(config_name='development'):
     @login_required
     def admin_dashboard():
         """Admin dashboard"""
-        total_pubs = Publication.query.count()
+        total_publications = Publication.query.count()
         total_messages = Message.query.count()
         unread_messages = Message.query.filter_by(read=False).count()
-        total_citations = db.session.query(db.func.sum(Publication.citations)).scalar() or 0
+        profile = ProfileInfo.query.first()
+        total_citations = profile.total_citations if profile else 0
+        research_areas_count = ResearchArea.query.count()
         
         recent_messages = Message.query.order_by(Message.created_at.desc()).limit(5).all()
-        recent_pubs = Publication.query.order_by(Publication.created_at.desc()).limit(5).all()
+        recent_publications = Publication.query.order_by(Publication.created_at.desc()).limit(5).all()
         
         return render_template('admin/dashboard.html',
-                             total_pubs=total_pubs,
+                             total_publications=total_publications,
                              total_messages=total_messages,
                              unread_messages=unread_messages,
                              total_citations=total_citations,
+                             research_areas_count=research_areas_count,
                              recent_messages=recent_messages,
-                             recent_pubs=recent_pubs)
+                             recent_publications=recent_publications)
     
     @app.route('/admin/publications')
     @login_required
