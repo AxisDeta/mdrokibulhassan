@@ -39,6 +39,12 @@ def create_app(config_name='development'):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
     def resolve_profile_image(profile_image):
+        # Always prefer a local override if it exists to avoid stale remote URLs.
+        override_path = os.path.join('static', 'uploads', 'images', 'profile.jpg')
+        if os.path.exists(override_path):
+            cache_buster = int(os.path.getmtime(override_path))
+            return url_for('static', filename='uploads/images/profile.jpg', v=cache_buster)
+
         if not profile_image:
             return None
         if profile_image.startswith('http://') or profile_image.startswith('https://'):
