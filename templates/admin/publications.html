@@ -120,9 +120,11 @@
         <div class="admin-header">
             <h1><i class="fas fa-book"></i> Manage Publications</h1>
             <div style="display: flex; gap: 1rem;">
-                <a href="{{ url_for('admin_import_scholar') }}" class="btn btn-secondary">
-                    <i class="fas fa-download"></i> Import from Scholar
-                </a>
+                <form method="POST" action="{{ url_for('admin_sync_scholar') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-rotate"></i> Sync Scholar Data
+                    </button>
+                </form>
                 <a href="{{ url_for('admin_add_publication') }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Add Publication
                 </a>

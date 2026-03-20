@@ -51,6 +51,35 @@
             color: white;
         }
 
+        .sync-panel,
+        .quick-actions,
+        .recent-activity {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .sync-panel {
+            display: flex;
+            justify-content: space-between;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .sync-meta h2,
+        .quick-actions h2,
+        .recent-activity h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .sync-meta p {
+            color: var(--text-secondary);
+            margin: 0.25rem 0;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -79,59 +108,42 @@
             color: var(--primary-color);
         }
 
-        .quick-actions {
-            background: var(--bg-primary);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            margin-bottom: 2rem;
-        }
-
-        .quick-actions h2 {
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-        }
-
         .action-buttons {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
         }
 
-        .action-btn {
+        .action-btn,
+        .action-btn-form button {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.75rem;
+            width: 100%;
             padding: 1rem;
+            border: none;
             background: var(--bg-secondary);
             color: var(--text-primary);
             text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
             transition: all var(--transition-normal);
+            cursor: pointer;
+            font: inherit;
         }
 
-        .action-btn:hover {
+        .action-btn:hover,
+        .action-btn-form button:hover {
             background: var(--primary-color);
             color: white;
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
         }
 
-        .action-btn i {
+        .action-btn i,
+        .action-btn-form button i {
             font-size: 1.5rem;
-        }
-
-        .recent-activity {
-            background: var(--bg-primary);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-        }
-
-        .recent-activity h2 {
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
         }
 
         .activity-list {
@@ -155,11 +167,29 @@
             font-size: 0.85rem;
             color: var(--text-tertiary);
         }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 900px) {
+            .sync-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <!-- Navigation -->
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
             <a href="{{ url_for('index') }}" class="logo">
@@ -180,7 +210,6 @@
             <span>Welcome, {{ current_user.username }}</span>
         </div>
 
-        <!-- Admin Navigation -->
         <div class="admin-nav">
             <a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a>
             <a href="{{ url_for('admin_publications') }}">Publications</a>
@@ -188,7 +217,24 @@
             <a href="{{ url_for('admin_profile') }}">Profile</a>
         </div>
 
-        <!-- Statistics -->
+        <div class="sync-panel">
+            <div class="sync-meta">
+                <h2>Google Scholar Sync</h2>
+                <p><span class="status-badge"><i class="fas fa-rotate"></i> {{ scholar_sync_status.last_status|default('Not synced yet')|title }}</span></p>
+                <p><strong>Profile URL:</strong> {{ profile.google_scholar_url if profile and profile.google_scholar_url else 'Not configured yet' }}</p>
+                <p><strong>Last successful sync:</strong> {{ scholar_sync_status.last_success_at if scholar_sync_status.last_success_at else 'Never' }}</p>
+                {% if scholar_sync_status.last_error %}
+                <p><strong>Last error:</strong> {{ scholar_sync_status.last_error }}</p>
+                {% endif %}
+            </div>
+            <form method="POST" action="{{ url_for('admin_sync_scholar') }}" class="action-btn-form">
+                <button type="submit">
+                    <i class="fas fa-rotate"></i>
+                    <span>Sync Scholar Now</span>
+                </button>
+            </form>
+        </div>
+
         <div class="stats-grid">
             <div class="stat-card">
                 <h3>Total Publications</h3>
@@ -211,7 +257,6 @@
             </div>
         </div>
 
-        <!-- Quick Actions -->
         <div class="quick-actions">
             <h2>Quick Actions</h2>
             <div class="action-buttons">
@@ -221,7 +266,7 @@
                 </a>
                 <a href="{{ url_for('admin_import_scholar') }}" class="action-btn">
                     <i class="fas fa-download"></i>
-                    <span>Import from Scholar</span>
+                    <span>Sync Settings</span>
                 </a>
                 <a href="{{ url_for('admin_publications') }}" class="action-btn">
                     <i class="fas fa-book"></i>
@@ -238,7 +283,6 @@
             </div>
         </div>
 
-        <!-- Recent Activity -->
         <div class="recent-activity">
             <h2>Recent Publications</h2>
             {% if recent_publications %}

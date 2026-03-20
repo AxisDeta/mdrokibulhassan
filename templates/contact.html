@@ -86,12 +86,12 @@
                 <div class="social-connect">
                     <h3>Connect on Social Media</h3>
                     <div class="social-links-large">
-                        <a href="http://www.linkedin.com/in/faiaz-chowdhury" target="_blank"
+                        <a href="{{ profile.linkedin_url if profile and profile.linkedin_url else '#' }}" target="_blank"
                             class="social-link linkedin">
                             <i class="fab fa-linkedin"></i>
                             <span>LinkedIn</span>
                         </a>
-                        <a href="https://scholar.google.com/citations?user=j3B8Dz8AAAAJ&hl=en" target="_blank"
+                        <a href="{{ profile.google_scholar_url if profile and profile.google_scholar_url else 'https://scholar.google.com/citations?user=jic1XEcAAAAJ&hl=en' }}" target="_blank"
                             class="social-link scholar">
                             <i class="fas fa-graduation-cap"></i>
                             <span>Google Scholar</span>
