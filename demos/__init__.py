@@ -8,83 +8,85 @@ from io import StringIO
 
 demos_bp = Blueprint('demos', __name__, url_prefix='/demos')
 
+DEMO_DEFINITIONS = [
+    {
+        'id': 'demand-forecasting',
+        'title': 'AI Demand Forecasting Tool',
+        'description': 'Upload historical sales data and get AI-powered demand forecasts with multiple ML models.',
+        'category': 'AI & Machine Learning',
+        'icon': 'fa-chart-line',
+        'color': '#3b82f6',
+        'paper_id': 11,  # Developing and implementing AI-driven models for demand forecasting
+        'status': 'active'
+    },
+    {
+        'id': 'inventory-optimization',
+        'title': 'AI Inventory Optimization Calculator',
+        'description': 'Calculate optimal inventory levels using AI to minimize costs while meeting demand.',
+        'category': 'Optimization',
+        'icon': 'fa-boxes',
+        'color': '#10b981',
+        'paper_id': 21,  # AI-Powered Inventory Optimization Models
+        'status': 'active'
+    },
+    {
+        'id': 'supplier-risk',
+        'title': 'Supplier Risk Assessment Tool',
+        'description': 'Evaluate and score supplier risk using data-driven AI models.',
+        'category': 'Risk Management',
+        'icon': 'fa-shield-alt',
+        'color': '#f59e0b',
+        'paper_id': 20,  # Building Robust AI and ML Models for Supplier Risk Management
+        'status': 'active'
+    },
+    {
+        'id': 'blockchain-security',
+        'title': 'Blockchain Supply Chain Security',
+        'description': 'Visualize how blockchain enhances supply chain integrity and transaction security.',
+        'category': 'Security',
+        'icon': 'fa-link',
+        'color': '#8b5cf6',
+        'paper_id': 2,  # Blockchain applications in retail cybersecurity
+        'status': 'active'
+    },
+    {
+        'id': 'carbon-optimizer',
+        'title': 'Carbon Reduction Calculator',
+        'description': 'Analyze operations and get ML-powered carbon reduction strategies using Walmart (2019-2021) data and Random Forest.',
+        'category': 'Sustainability',
+        'icon': 'fa-leaf',
+        'color': '#10b981',
+        'paper_id': 13,  # Predictive analytics for sustainable supply chain operations
+        'status': 'active'
+    },
+    {
+        'id': 'sustainability-matrix',
+        'title': 'Sustainable Supply Chain Matrix',
+        'description': 'Decision support tool for evaluating supply chain sustainability.',
+        'category': 'Sustainability',
+        'icon': 'fa-balance-scale',
+        'color': '#14b8a6',
+        'paper_id': 8,  # Optimizing sustainable supply chains
+        'status': 'active'
+    },
+    {
+        'id': 'route-optimizer',
+        'title': 'Eco-Efficient Route Planner',
+        'description': 'Plan delivery routes optimized for both cost and environmental impact.',
+        'category': 'Optimization',
+        'icon': 'fa-route',
+        'color': '#06b6d4',
+        'paper_id': 12,  # Designing and Deploying AI Models for Sustainable Logistics
+        'status': 'coming_soon'
+    }
+]
+
+DEMO_BY_ID = {demo['id']: demo for demo in DEMO_DEFINITIONS}
+
 @demos_bp.route('/')
 def demos_landing():
     """Demos landing page showing all available demos"""
-    demos = [
-        {
-            'id': 'demand-forecasting',
-            'title': 'AI Demand Forecasting Tool',
-            'description': 'Upload historical sales data and get AI-powered demand forecasts with multiple ML models.',
-            'category': 'AI & Machine Learning',
-            'icon': 'fa-chart-line',
-            'color': '#3b82f6',
-            'paper_id': 11,  # Developing and implementing AI-driven models for demand forecasting
-            'status': 'active'
-        },
-        {
-            'id': 'inventory-optimization',
-            'title': 'AI Inventory Optimization Calculator',
-            'description': 'Calculate optimal inventory levels using AI to minimize costs while meeting demand.',
-            'category': 'Optimization',
-            'icon': 'fa-boxes',
-            'color': '#10b981',
-            'paper_id': 21,  # AI-Powered Inventory Optimization Models
-            'status': 'active'  # Changed from coming_soon
-        },
-        {
-            'id': 'supplier-risk',
-            'title': 'Supplier Risk Assessment Tool',
-            'description': 'Evaluate and score supplier risk using data-driven AI models.',
-            'category': 'Risk Management',
-            'icon': 'fa-shield-alt',
-            'color': '#f59e0b',
-            'paper_id': 20,  # Building Robust AI and ML Models for Supplier Risk Management
-            'status': 'active'  # Changed from coming_soon
-        },
-        {
-            'id': 'blockchain-security',
-            'title': 'Blockchain Supply Chain Security',
-            'description': 'Visualize how blockchain enhances supply chain integrity and transaction security.',
-            'category': 'Security',
-            'icon': 'fa-link',
-            'color': '#8b5cf6',
-            'paper_id': 2,  # Blockchain applications in retail cybersecurity
-            'status': 'active'
-        },
-        {
-            'id': 'carbon-optimizer',
-            'title': 'Carbon Reduction Calculator',
-            'description': 'Analyze operations and get ML-powered carbon reduction strategies using Walmart (2019-2021) data and Random Forest.',
-            'category': 'Sustainability',
-            'icon': 'fa-leaf',
-            'color': '#10b981',
-            'paper_id': 13,  # Predictive analytics for sustainable supply chain operations
-            'status': 'active'
-        },
-        {
-            'id': 'sustainability-matrix',
-            'title': 'Sustainable Supply Chain Matrix',
-            'description': 'Decision support tool for evaluating supply chain sustainability.',
-            'category': 'Sustainability',
-            'icon': 'fa-balance-scale',
-            'color': '#14b8a6',
-            'paper_id': 8,  # Optimizing sustainable supply chains
-            'status': 'active'
-        },
-        {
-            'id': 'route-optimizer',
-            'title': 'Eco-Efficient Route Planner',
-            'description': 'Plan delivery routes optimized for both cost and environmental impact.',
-            'category': 'Optimization',
-            'icon': 'fa-route',
-            'color': '#06b6d4',
-            'paper_id': 12,  # Designing and Deploying AI Models for Sustainable Logistics
-            'status': 'coming_soon'
-        }
-    ]
-    
-    return render_template('demos/demos_landing.html', demos=demos)
+    return render_template('demos/demos_landing.html', demos=DEMO_DEFINITIONS)
 
 @demos_bp.route('/demand-forecasting', methods=['GET', 'POST'])
 def demand_forecasting():
@@ -121,7 +123,10 @@ def demand_forecasting():
             return jsonify({'error': str(e)}), 500
     
     # GET request - show the form
-    return render_template('demos/demand_forecasting.html')
+    return render_template(
+        'demos/demand_forecasting.html',
+        related_paper_id=DEMO_BY_ID['demand-forecasting']['paper_id']
+    )
 
 @demos_bp.route('/demand-forecasting/sample-data')
 def download_sample_data():
@@ -147,10 +152,19 @@ def inventory_optimization():
     
     try:
         skus = get_available_skus()
-        return render_template('demos/inventory_optimization.html', skus=skus)
+        return render_template(
+            'demos/inventory_optimization.html',
+            skus=skus,
+            related_paper_id=DEMO_BY_ID['inventory-optimization']['paper_id']
+        )
     except Exception as e:
         # If data file doesn't exist, show template with error
-        return render_template('demos/inventory_optimization.html', skus=[], error=str(e))
+        return render_template(
+            'demos/inventory_optimization.html',
+            skus=[],
+            error=str(e),
+            related_paper_id=DEMO_BY_ID['inventory-optimization']['paper_id']
+        )
 
 @demos_bp.route('/api/inventory-analysis', methods=['POST'])
 def inventory_analysis_api():
@@ -223,7 +237,10 @@ def inventory_analysis_api():
 @demos_bp.route('/supplier-risk')
 def supplier_risk():
     """Render supplier risk assessment tool"""
-    return render_template('demos/supplier_risk.html')
+    return render_template(
+        'demos/supplier_risk.html',
+        related_paper_id=DEMO_BY_ID['supplier-risk']['paper_id']
+    )
 
 
 @demos_bp.route('/api/supplier-risk-analysis', methods=['POST'])
@@ -325,7 +342,10 @@ def supplier_risk_analysis_api():
 @demos_bp.route('/blockchain-security')
 def blockchain_security():
     """Render the Blockchain Retail Cybersecurity demo page"""
-    return render_template('demos/blockchain_security.html')
+    return render_template(
+        'demos/blockchain_security.html',
+        related_paper_id=DEMO_BY_ID['blockchain-security']['paper_id']
+    )
 
 @demos_bp.route('/api/blockchain-simulation', methods=['POST'])
 def api_blockchain_simulation():
@@ -382,7 +402,10 @@ def api_blockchain_ledger():
 @demos_bp.route('/carbon-optimizer')
 def carbon_optimizer():
     """Render the AI Carbon Footprint Optimizer demo page"""
-    return render_template('demos/carbon_optimizer.html')
+    return render_template(
+        'demos/carbon_optimizer.html',
+        related_paper_id=DEMO_BY_ID['carbon-optimizer']['paper_id']
+    )
 
 @demos_bp.route('/api/carbon-analysis', methods=['POST'])
 def api_carbon_analysis():
@@ -438,7 +461,10 @@ def api_carbon_simulation():
 @demos_bp.route('/sustainability-matrix')
 def sustainability_matrix():
     """Render the Sustainable Supply Chain Matrix demo"""
-    return render_template('demos/sustainability_matrix.html')
+    return render_template(
+        'demos/sustainability_matrix.html',
+        related_paper_id=DEMO_BY_ID['sustainability-matrix']['paper_id']
+    )
 
 @demos_bp.route('/api/matrix-analysis', methods=['POST'])
 def api_matrix_analysis():
