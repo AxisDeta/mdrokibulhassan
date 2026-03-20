@@ -293,7 +293,7 @@ body {
 
 .profile-img {
     width: 100%;
-    max-width: 128px;
+    max-width: 400px;
     height: auto;
     border-radius: 20px;
     box-shadow: var(--shadow-xl);
