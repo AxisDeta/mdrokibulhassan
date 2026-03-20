@@ -5,6 +5,14 @@ import os
 from config import config
 from models import db, User, Publication, ResearchArea, Message, ProfileInfo
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from scholar_utils import (
+    ScholarSyncError,
+    attempt_cached_profile_image_refresh,
+    get_scholar_sync_status,
+    is_sync_stale,
+    sync_profile_and_publications,
+    update_scholar_sync_status,
+)
 
 def create_app(config_name='development'):
     app = Flask(__name__)
@@ -29,6 +37,64 @@ def create_app(config_name='development'):
     # Helper function for allowed files
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+    def resolve_profile_image(profile_image):
+        if not profile_image:
+            return None
+        if profile_image.startswith('http://') or profile_image.startswith('https://'):
+            return profile_image
+        return url_for('static', filename=f'uploads/images/{profile_image}')
+
+    def maybe_sync_scholar_profile(force=False):
+        profile = ProfileInfo.query.first()
+        if not profile or not profile.google_scholar_url:
+            return None
+
+        if not force and not is_sync_stale():
+            return get_scholar_sync_status()
+
+        try:
+            result = sync_profile_and_publications(
+                profile=profile,
+                db=db,
+                Publication=Publication,
+                ResearchArea=ResearchArea,
+                force=force,
+            )
+            return result
+        except ScholarSyncError as exc:
+            app.logger.warning('Google Scholar sync skipped: %s', exc)
+            update_scholar_sync_status(last_attempt_at=None, last_status='error', last_error=str(exc))
+            return {'status': 'error', 'message': str(exc), 'stats': get_scholar_sync_status().get('stats', {})}
+        except Exception as exc:
+            app.logger.exception('Unexpected Google Scholar sync failure')
+            update_scholar_sync_status(last_attempt_at=None, last_status='error', last_error=str(exc))
+            return {'status': 'error', 'message': str(exc), 'stats': get_scholar_sync_status().get('stats', {})}
+
+    @app.context_processor
+    def inject_profile_helpers():
+        profile = ProfileInfo.query.first()
+        return {
+            'site_profile': profile,
+            'profile_image_src': resolve_profile_image(profile.profile_image) if profile else None,
+            'scholar_sync_status': get_scholar_sync_status(),
+        }
+
+    @app.before_request
+    def auto_sync_google_scholar():
+        if request.method != 'GET':
+            return None
+
+        public_endpoints = {'index', 'about', 'publications', 'publication_detail', 'contact'}
+        if request.endpoint in public_endpoints:
+            profile = ProfileInfo.query.first()
+            if profile:
+                attempt_cached_profile_image_refresh(profile)
+                if db.session.is_modified(profile):
+                    db.session.commit()
+            maybe_sync_scholar_profile(force=False)
+
+        return None
     
     # ============ PUBLIC ROUTES ============
     
@@ -238,7 +304,9 @@ def create_app(config_name='development'):
                              total_citations=total_citations,
                              research_areas_count=research_areas_count,
                              recent_messages=recent_messages,
-                             recent_publications=recent_publications)
+                             recent_publications=recent_publications,
+                             profile=profile,
+                             scholar_sync_status=get_scholar_sync_status())
     
     @app.route('/admin/publications')
     @login_required
@@ -384,6 +452,7 @@ def create_app(config_name='development'):
             profile.phone = request.form.get('phone')
             profile.linkedin_url = request.form.get('linkedin_url')
             profile.google_scholar_url = request.form.get('google_scholar_url')
+            attempt_cached_profile_image_refresh(profile)
             profile.github_url = request.form.get('github_url')
             profile.twitter_url = request.form.get('twitter_url')
             profile.total_citations = request.form.get('total_citations', type=int, default=0)
@@ -406,92 +475,58 @@ def create_app(config_name='development'):
     @app.route('/admin/import-scholar', methods=['GET', 'POST'])
     @login_required
     def admin_import_scholar():
-        """Import publications from Google Scholar"""
-        from scholar_utils import scrape_google_scholar, categorize_publication
-        
+        """Sync publications and profile data from Google Scholar."""
         results = None
-        scholar_url = None
-        
+        profile = ProfileInfo.query.first()
+        scholar_url = profile.google_scholar_url if profile else None
+
         if request.method == 'POST':
-            scholar_url = request.form.get('scholar_url', '').strip()
-            
-            if not scholar_url:
+            submitted_url = request.form.get('scholar_url', '').strip()
+            if not submitted_url:
                 flash('Please enter a Google Scholar profile URL', 'error')
-                return render_template('admin/import_scholar.html', scholar_url=scholar_url)
-            
-            # Scrape publications
-            publications_data = scrape_google_scholar(scholar_url)
-            
-            # Check for errors
-            if isinstance(publications_data, dict) and 'error' in publications_data:
-                flash(f'Error scraping Google Scholar: {publications_data["error"]}', 'error')
-                return render_template('admin/import_scholar.html', scholar_url=scholar_url)
-            
-            if not publications_data:
-                flash('No publications found at this URL', 'warning')
-                return render_template('admin/import_scholar.html', scholar_url=scholar_url)
-            
-            # Get research areas for categorization
-            research_areas = ResearchArea.query.all()
-            
-            added_count = 0
-            skipped_count = 0
-            pub_results = []
-            
-            for pub_data in publications_data:
-                # Check if publication already exists
-                existing = Publication.query.filter_by(title=pub_data['title']).first()
-                
-                if existing:
-                    skipped_count += 1
-                    pub_results.append({
-                        'title': pub_data['title'],
-                        'year': pub_data['year'],
-                        'status': 'skipped'
-                    })
-                    continue
-                
-                # Create new publication
-                publication = Publication(
-                    title=pub_data['title'],
-                    authors=pub_data['authors'],
-                    venue=pub_data['venue'],
-                    year=pub_data['year'],
-                    citations=pub_data['citations'],
-                    google_scholar_url=pub_data.get('google_scholar_url')
-                )
-                
-                # Auto-assign research areas
-                matched_areas = categorize_publication(pub_data, research_areas)
-                publication.research_areas.extend(matched_areas)
-                
-                db.session.add(publication)
-                added_count += 1
-                pub_results.append({
-                    'title': pub_data['title'],
-                    'year': pub_data['year'],
-                    'status': 'added'
-                })
-            
-            try:
-                db.session.commit()
-                flash(f'Successfully imported {added_count} publications! ({skipped_count} duplicates skipped)', 'success')
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Error saving publications: {str(e)}', 'error')
-                return render_template('admin/import_scholar.html', scholar_url=scholar_url)
-            
-            results = {
-                'total': len(publications_data),
-                'added': added_count,
-                'skipped': skipped_count,
-                'publications': pub_results
-            }
-        
-        return render_template('admin/import_scholar.html', 
-                             scholar_url=scholar_url,
-                             results=results)
-    
+                return render_template('admin/import_scholar.html', scholar_url=scholar_url, results=results)
+
+            if not profile:
+                profile = ProfileInfo(full_name='MD ROKIBUL HASAN')
+                db.session.add(profile)
+
+            profile.google_scholar_url = submitted_url
+            attempt_cached_profile_image_refresh(profile)
+            db.session.commit()
+            scholar_url = submitted_url
+
+            sync_result = maybe_sync_scholar_profile(force=True)
+            if sync_result and sync_result.get('status') == 'success':
+                stats = sync_result.get('stats', {})
+                flash('Google Scholar data updated successfully.', 'success')
+                results = {
+                    'total': stats.get('publications_found', 0),
+                    'added': stats.get('publications_added', 0),
+                    'updated': stats.get('publications_updated', 0),
+                    'skipped': stats.get('publications_unchanged', 0),
+                }
+            else:
+                flash(f"Error syncing Google Scholar: {(sync_result or {}).get('message', 'Unknown error')}", 'error')
+
+        return render_template('admin/import_scholar.html', scholar_url=scholar_url, results=results)
+
+    @app.route('/admin/sync-scholar', methods=['POST'])
+    @login_required
+    def admin_sync_scholar():
+        """Trigger a full Google Scholar sync from the dashboard."""
+        result = maybe_sync_scholar_profile(force=True)
+        if result and result.get('status') == 'success':
+            stats = result.get('stats', {})
+            flash(
+                f"Scholar sync complete: {stats.get('publications_added', 0)} added, "
+                f"{stats.get('publications_updated', 0)} updated, and "
+                f"{stats.get('publications_unchanged', 0)} unchanged.",
+                'success'
+            )
+        else:
+            flash(f"Scholar sync failed: {(result or {}).get('message', 'Unknown error')}", 'error')
+        return redirect(request.referrer or url_for('admin_dashboard'))
+
     # ============ ERROR HANDLERS ============
     
     @app.errorhandler(404)

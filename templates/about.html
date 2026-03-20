@@ -18,8 +18,8 @@
         <div class="about-grid">
             <div class="about-image">
                 {% if profile and profile.profile_image %}
-                <img src="{{ url_for('static', filename='uploads/images/' + profile.profile_image) }}"
-                    alt="MD ROKIBUL HASAN" class="about-profile-img">
+                <img src="{{ profile_image_src }}"
+                    alt="{{ profile.full_name if profile else 'MD ROKIBUL HASAN' }}" class="about-profile-img">
                 {% else %}
                 <div class="about-profile-placeholder">
                     <i class="fas fa-user-graduate"></i>

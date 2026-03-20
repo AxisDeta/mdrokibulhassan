@@ -120,7 +120,7 @@
                         <a href="#" target="_blank" rel="noopener" aria-label="LinkedIn">
                             <i class="fab fa-linkedin"></i>
                         </a>
-                        <a href="https://scholar.google.com/citations?user=jic1XEcAAAAJ&hl=en" target="_blank"
+                        <a href="{{ (site_profile.google_scholar_url if site_profile and site_profile.google_scholar_url else 'https://scholar.google.com/citations?user=jic1XEcAAAAJ&hl=en') }}" target="_blank"
                             rel="noopener" aria-label="Google Scholar">
                             <i class="fas fa-graduation-cap"></i>
                         </a>
