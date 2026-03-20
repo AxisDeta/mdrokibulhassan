@@ -43,7 +43,13 @@ def create_app(config_name='development'):
             return None
         if profile_image.startswith('http://') or profile_image.startswith('https://'):
             return profile_image
-        return url_for('static', filename=f'uploads/images/{profile_image}')
+        static_path = os.path.join('static', 'uploads', 'images', profile_image)
+        cache_buster = None
+        try:
+            cache_buster = int(os.path.getmtime(static_path))
+        except OSError:
+            cache_buster = None
+        return url_for('static', filename=f'uploads/images/{profile_image}', v=cache_buster)
 
     def maybe_sync_scholar_profile(force=False):
         profile = ProfileInfo.query.first()
