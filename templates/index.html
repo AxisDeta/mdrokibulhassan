@@ -102,8 +102,12 @@
         <div class="research-areas-grid">
             {% for area in research_areas %}
             <div class="research-area-card animate-on-scroll">
+                {% set icon_class = area.icon or 'fas fa-lightbulb' %}
+                {% if ' ' not in icon_class and icon_class[:3] == 'fa-' %}
+                {% set icon_class = 'fas ' ~ icon_class %}
+                {% endif %}
                 <div class="area-icon" style="background: {{ area.color or '#3b82f6' }}20;">
-                    <i class="{{ area.icon or 'fas fa-lightbulb' }}" style="color: {{ area.color or '#3b82f6' }};"></i>
+                    <i class="{{ icon_class }}" style="color: {{ area.color or '#3b82f6' }};"></i>
                 </div>
                 <h3 class="area-name">{{ area.name }}</h3>
                 <p class="area-description">{{ area.description }}</p>

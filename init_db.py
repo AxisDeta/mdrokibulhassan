@@ -46,27 +46,27 @@ with app.app_context():
         {
             'name': 'Supply Chain Management',
             'description': 'Research in supply chain optimization, logistics, and operations management',
-            'icon': 'fa-truck'
+            'icon': 'fas fa-truck'
         },
         {
             'name': 'Machine Learning',
             'description': 'Application of machine learning algorithms and AI techniques',
-            'icon': 'fa-brain'
+            'icon': 'fas fa-brain'
         },
         {
             'name': 'Big Data Analytics',
             'description': 'Big data processing, analysis, and insights generation',
-            'icon': 'fa-database'
+            'icon': 'fas fa-database'
         },
         {
             'name': 'Business Analytics',
             'description': 'Data-driven business decision making and performance optimization',
-            'icon': 'fa-chart-line'
+            'icon': 'fas fa-chart-line'
         },
         {
             'name': 'Project Management',
             'description': 'Project planning, execution, and management methodologies',
-            'icon': 'fa-tasks'
+            'icon': 'fas fa-tasks'
         }
     ]
     

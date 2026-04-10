@@ -63,8 +63,12 @@
         <h2 class="section-title">Research Interests</h2>
         <div class="research-tags">
             {% for area in research_areas %}
+            {% set icon_class = area.icon or 'fas fa-lightbulb' %}
+            {% if ' ' not in icon_class and icon_class[:3] == 'fa-' %}
+            {% set icon_class = 'fas ' ~ icon_class %}
+            {% endif %}
             <span class="research-tag" style="border-color: {{ area.color or '#3b82f6' }};">
-                <i class="{{ area.icon or 'fas fa-lightbulb' }}" style="color: {{ area.color or '#3b82f6' }};"></i>
+                <i class="{{ icon_class }}" style="color: {{ area.color or '#3b82f6' }};"></i>
                 {{ area.name }}
             </span>
             {% endfor %}
