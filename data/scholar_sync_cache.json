@@ -1,8 +1,8 @@
 {
-  "last_attempt_at": "2026-04-14T19:07:55.734572+00:00",
-  "last_status": "success",
-  "last_error": null,
-  "updated_at": "2026-04-14T19:07:55.734572+00:00",
+  "last_attempt_at": null,
+  "last_status": "error",
+  "last_error": "Google Scholar blocked the request with an anti-bot challenge.",
+  "updated_at": "2026-04-15T18:39:25.185204+00:00",
   "last_success_at": "2026-04-14T19:07:55.734572+00:00",
   "stats": {
     "publications_found": 27,

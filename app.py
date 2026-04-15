@@ -97,7 +97,7 @@ def create_app(config_name='development'):
         if request.method != 'GET':
             return None
 
-        public_endpoints = {'index', 'about', 'publications', 'publication_detail', 'contact'}
+        public_endpoints = {'index', 'about', 'publications', 'publication_detail', 'contact', 'netsuite_o2c_portfolio'}
         if request.endpoint in public_endpoints:
             profile = ProfileInfo.query.first()
             if profile:
@@ -233,6 +233,12 @@ def create_app(config_name='development'):
         
         profile = ProfileInfo.query.first()
         return render_template('contact.html', profile=profile)
+
+    @app.route('/portfolio/netsuite-o2c')
+    def netsuite_o2c_portfolio():
+        """Hidden portfolio proof page for a NetSuite Order-to-Cash role."""
+        profile = ProfileInfo.query.first()
+        return render_template('portfolio_netsuite_o2c.html', profile=profile)
     
     # ============ API ROUTES ============
     
