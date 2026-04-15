@@ -23,6 +23,40 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('addBlockBtn').addEventListener('click', addNewBlock);
 });
 
+function buildBlockchainFallback(simulation, mode) {
+    const recommendations = mode === 'ledger'
+        ? [
+            'Use the immutable chain to verify critical supply chain events before downstream action is taken.',
+            'Treat ledger verification as a trust-control step for sensitive supplier and shipment updates.',
+            'Keep high-risk transactions or partner messages tied to an auditable record trail.'
+        ]
+        : [
+            'Keep phishing verification controls in front of vendor communication and operational approvals.',
+            'Use the detection rate as a signal for whether partner verification should be tightened further.',
+            'Escalate vendor-messaging controls if malicious message volume rises materially.'
+        ];
+
+    return {
+        headline: mode === 'ledger'
+            ? 'The ledger view confirms whether business records remain tamper-evident and ready for verification.'
+            : `The simulation shows ${simulation.detected_phishing} phishing attempts blocked out of ${simulation.total_iterations} total messages.`,
+        priority: mode === 'ledger' ? 'Monitor' : 'High',
+        recommendations,
+        interpretation: [
+            'A verified chain supports stronger transaction trust and partner accountability.',
+            'A high blocked-phishing count signals why sender verification matters operationally, not only technically.'
+        ],
+        business_impact: [
+            'This output helps protect brand trust, vendor communication, and transaction integrity.',
+            'The clearest business value is preventing bad data or malicious messages from triggering downstream decisions.'
+        ],
+        watchouts: [
+            'A secure ledger still depends on disciplined use and verification at the process level.',
+            'Threat pressure can rise even if current controls appear effective.'
+        ]
+    };
+}
+
 /**
  * Handle lab tab switching
  */
@@ -81,6 +115,17 @@ async function runPhishingSimulation() {
         document.getElementById('phishingCount').textContent = data.detected_phishing;
         renderSimulationChart(data);
         renderMessageLog(data.messages_sample);
+        requestBusinessInsight({
+            demoId: 'blockchain-security',
+            context: {
+                total_iterations: data.total_iterations,
+                phishing_messages: data.phishing_messages,
+                detected_phishing: data.detected_phishing,
+                mitigation_rate: data.mitigation_rate
+            },
+            fallbackInsight: buildBlockchainFallback(data, 'simulation'),
+            containerId: 'businessInsightContainer'
+        });
 
         // Show results
         loading.style.display = 'none';
@@ -208,6 +253,15 @@ async function addNewBlock() {
             // Show results state if hidden
             document.getElementById('initialState').style.display = 'none';
             document.getElementById('resultsState').style.display = 'block';
+            requestBusinessInsight({
+                demoId: 'blockchain-security',
+                context: {
+                    chain_updated: true,
+                    latest_message: message
+                },
+                fallbackInsight: buildBlockchainFallback({}, 'ledger'),
+                containerId: 'businessInsightContainer'
+            });
         }
 
     } catch (error) {

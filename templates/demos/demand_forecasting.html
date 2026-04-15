@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}AI Demand Forecasting Tool - MD ROKIBUL HASAN{% endblock %}
+{% block title %}Demand Forecaster - MD ROKIBUL HASAN{% endblock %}
 
 {% block content %}
-<!-- Demo Header -->
 <section class="demo-header">
     <div class="container">
         <div class="demo-breadcrumb">
-            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Intelligence</a>
         </div>
-        <h1 class="demo-page-title">AI Demand Forecasting Tool</h1>
+        <h1 class="demo-page-title">Demand Forecaster</h1>
         <p class="demo-page-subtitle">
-            Advanced multi-feature demand forecasting using Linear Regression and Random Forest models with feature
-            engineering (PCA, scaling, encoding)
+            Turn historical sales data into a forward-looking demand outlook with business interpretation, planning signals,
+            and recommended next actions.
         </p>
         <div class="demo-meta-info">
-            <span class="demo-tag"><i class="fas fa-tag"></i> AI & Machine Learning</span>
+            <span class="demo-tag"><i class="fas fa-chart-line"></i> Demand Planning</span>
+            <span class="demo-tag"><i class="fas fa-briefcase"></i> Business Decisions</span>
             <a href="{{ url_for('publication_detail', pub_id=related_paper_id) }}" class="demo-research-link">
                 <i class="fas fa-file-alt"></i> View Related Research
             </a>
@@ -23,14 +23,12 @@
     </div>
 </section>
 
-<!-- Demo Tool Section -->
 <section class="demo-tool-section">
     <div class="container">
         <div class="demo-grid">
-            <!-- Left Panel - Input -->
             <div class="demo-panel">
                 <div class="panel-header">
-                    <h2><i class="fas fa-upload"></i> Upload Dataset</h2>
+                    <h2><i class="fas fa-upload"></i> Upload History</h2>
                 </div>
                 <div class="panel-content">
                     <form id="forecastForm" enctype="multipart/form-data">
@@ -39,50 +37,48 @@
                             <div class="file-upload-area" id="fileUploadArea">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <p>Click to upload or drag and drop</p>
-                                <small>CSV file with multiple features and Target_Sales column</small>
+                                <small>Include at least 24 records with a <strong>Target_Sales</strong> column</small>
                                 <input type="file" id="dataFile" name="data_file" accept=".csv" required>
                             </div>
                             <div id="fileName" class="file-name"></div>
                         </div>
 
+                        <div class="form-group">
+                            <label for="forecastHorizon">
+                                Forecast Horizon: <span id="forecastHorizonValue">12</span> periods
+                            </label>
+                            <input type="range" id="forecastHorizon" name="forecast_horizon" min="4" max="24" value="12"
+                                class="slider">
+                            <small>How far ahead the outlook should project from your latest data point</small>
+                        </div>
+
                         <button type="submit" class="btn btn-primary btn-block" id="generateBtn">
-                            <i class="fas fa-brain"></i> Train Models & Forecast
+                            <i class="fas fa-chart-area"></i> Generate Demand Outlook
                         </button>
                     </form>
 
-                    <!-- Dataset Info -->
                     <div class="info-box">
-                        <h4><i class="fas fa-info-circle"></i> Required CSV Format</h4>
-                        <p>Your CSV must include <strong>Target_Sales</strong> column and at least these features:</p>
+                        <h4><i class="fas fa-info-circle"></i> Business Use</h4>
                         <ul>
-                            <li><strong>Price</strong>: Product price</li>
-                            <li><strong>Units_Sold</strong>: Historical units sold</li>
-                            <li><strong>Month</strong>: Month (1-12)</li>
-                        </ul>
-                        <p><strong>Optional features</strong> (improves accuracy):</p>
-                        <ul style="font-size: 0.875rem;">
-                            <li>Product_ID, Category, Promotion, Discount, Shelf_Life</li>
-                            <li>Inventory_Level, Stockouts, Lead_Time, Supplier_Reliability</li>
-                            <li>Holiday, Temperature, Rainfall, GDP, Inflation_Rate</li>
-                            <li>Unemployment_Rate, Customer_Age_Group, Customer_Income</li>
-                            <li>Customer_Location, Lag_Sales_1</li>
+                            <li><strong>Why it matters:</strong> Improve purchasing, inventory, staffing, and promotion timing.</li>
+                            <li><strong>Questions it answers:</strong> Is demand rising or falling, where is the peak, and how much planning risk is ahead?</li>
+                            <li><strong>What to do next:</strong> Use the recommendations panel to adjust buys, safety stock, and commercial plans.</li>
                         </ul>
                         <a href="{{ url_for('demos.download_sample_data') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-download"></i> Download Sample Dataset (1000 records)
+                            <i class="fas fa-download"></i> Download Sample Dataset
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Panel - Results -->
             <div class="demo-panel">
                 <div class="panel-header">
-                    <h2><i class="fas fa-chart-bar"></i> Model Results</h2>
+                    <h2><i class="fas fa-briefcase"></i> Planning Summary</h2>
                 </div>
                 <div class="panel-content">
                     <div id="loadingState" class="loading-state" style="display: none;">
                         <div class="spinner"></div>
-                        <p>Training models and generating forecasts...</p>
+                        <p>Generating the future demand outlook...</p>
                     </div>
 
                     <div id="errorState" class="error-state" style="display: none;">
@@ -91,103 +87,72 @@
                     </div>
 
                     <div id="resultsState" class="results-state" style="display: none;">
-                        <!-- Dataset Statistics -->
+                        <div id="businessInsightContainer"></div>
+
                         <div class="results-section">
-                            <h3>Dataset Statistics</h3>
+                            <h3>Business Snapshot</h3>
                             <div class="stats-cards">
                                 <div class="stat-card-small">
-                                    <div class="stat-label">Records</div>
-                                    <div class="stat-value" id="statRecords">-</div>
+                                    <div class="stat-label">Projected Total</div>
+                                    <div class="stat-value" id="projectedTotal">-</div>
                                 </div>
                                 <div class="stat-card-small">
-                                    <div class="stat-label">Features</div>
-                                    <div class="stat-value" id="statFeatures">-</div>
+                                    <div class="stat-label">Avg Period Demand</div>
+                                    <div class="stat-value" id="projectedAverage">-</div>
                                 </div>
                                 <div class="stat-card-small">
-                                    <div class="stat-label">Avg Sales</div>
-                                    <div class="stat-value" id="statMean">-</div>
+                                    <div class="stat-label">Peak Period</div>
+                                    <div class="stat-value" id="peakPeriod">-</div>
                                 </div>
                                 <div class="stat-card-small">
-                                    <div class="stat-label">Std Dev</div>
-                                    <div class="stat-value" id="statStd">-</div>
+                                    <div class="stat-label">Planning Risk</div>
+                                    <div class="stat-value" id="planningRisk">-</div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Feature Engineering Info -->
                         <div class="results-section">
-                            <h3>Feature Engineering</h3>
+                            <h3>Demand Reading</h3>
                             <div class="feature-info">
                                 <div class="feature-stat">
-                                    <span class="label">Original Features:</span>
-                                    <span class="value" id="origFeatures">-</span>
+                                    <span class="label">Historical Average:</span>
+                                    <span class="value" id="historicalAverage">-</span>
                                 </div>
                                 <div class="feature-stat">
-                                    <span class="label">After Encoding:</span>
-                                    <span class="value" id="processedFeatures">-</span>
+                                    <span class="label">Demand Trend:</span>
+                                    <span class="value" id="trendPercent">-</span>
                                 </div>
                                 <div class="feature-stat">
-                                    <span class="label">PCA Components:</span>
-                                    <span class="value" id="pcaComponents">-</span>
+                                    <span class="label">Forecast Volatility:</span>
+                                    <span class="value" id="volatilityPercent">-</span>
                                 </div>
                                 <div class="feature-stat">
-                                    <span class="label">Variance Retained:</span>
-                                    <span class="value" id="varianceRetained">-</span>
+                                    <span class="label">Records Analyzed:</span>
+                                    <span class="value" id="recordCount">-</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Model Comparison Summary (No Tabs) -->
-                        <div class="results-section">
-                            <h3>Model Performance Summary</h3>
-                            <div id="modelMetrics" class="model-metrics">
-                                <!-- Comparison Table will be inserted here -->
-                            </div>
-                        </div>
-
-                        <!-- Export Button -->
                         <button class="btn btn-secondary btn-block" id="exportBtn">
-                            <i class="fas fa-file-export"></i> Export Results
+                            <i class="fas fa-file-export"></i> Export Planning Summary
                         </button>
                     </div>
 
                     <div id="initialState" class="initial-state">
-                        <i class="fas fa-brain"></i>
-                        <p>Upload your dataset to train AI models</p>
+                        <i class="fas fa-chart-area"></i>
+                        <p>Upload demand history to generate a future-facing business forecast.</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Full Width Charts Section - Initially Hidden -->
         <div id="resultsCharts" class="full-width-charts" style="display: none;">
             <div class="container">
-                <div class="charts-header-container"
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.5rem; color: #111827;">Detailed Visualizations</h3>
-                    <div class="model-tabs" style="margin: 0;">
-                        <button class="model-tab active" data-model="Linear Regression">Linear Regression</button>
-                        <button class="model-tab" data-model="Random Forest">Random Forest</button>
-                    </div>
-                </div>
-
-                <!-- Predictions Visualization -->
                 <div class="chart-section-card">
-                    <h3>Forecast Visualization (Test Set)</h3>
-                    <p class="chart-description">Comparison of actual vs predicted sales values over time (first 50
-                        samples).</p>
+                    <h3>Historical vs Forecast Outlook</h3>
+                    <p class="chart-description">Recent demand history on the left, projected demand periods on the right.</p>
                     <div class="chart-container-large">
                         <div id="forecastChart"></div>
-                    </div>
-                </div>
-
-                <!-- Model Fit Visualization -->
-                <div class="chart-section-card">
-                    <h3>Model Fit Analysis</h3>
-                    <p class="chart-description">Scatter plot showing correlation between actual and predicted values.
-                        Points on the diagonal line indicate perfect predictions.</p>
-                    <div class="chart-container-large">
-                        <div id="fitChart"></div>
                     </div>
                 </div>
             </div>
@@ -195,31 +160,24 @@
     </div>
 </section>
 
-<!-- Methodology Section -->
 <section class="how-it-works-section">
     <div class="container">
-        <h2 class="section-title">Methodology (Based on Research)</h2>
+        <h2 class="section-title">How To Use The Output</h2>
         <div class="steps-grid">
             <div class="step-card">
                 <div class="step-number">1</div>
-                <h3>Data Preprocessing</h3>
-                <p>Missing value imputation, categorical encoding (OneHotEncoder), and feature normalization
-                    (MinMaxScaler)</p>
+                <h3>Check The Recommendation Priority</h3>
+                <p>Start with the AI action list to see whether the outlook calls for immediate changes or simple monitoring.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">2</div>
-                <h3>Dimensionality Reduction</h3>
-                <p>PCA applied to retain 95% of variance while reducing feature space complexity</p>
+                <h3>Review The Peak Window</h3>
+                <p>Use the peak period and projected total to align purchasing, labor, and inventory cover.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">3</div>
-                <h3>Model Training</h3>
-                <p>Linear Regression and Random Forest trained on 80% of data, validated on 20% test set</p>
-            </div>
-            <div class="step-card">
-                <div class="step-number">4</div>
-                <h3>Evaluation</h3>
-                <p>Models evaluated using RMSE, MAE, and R² metrics on both training and test datasets</p>
+                <h3>Watch Volatility</h3>
+                <p>Higher volatility means more safety stock, tighter supplier follow-up, and more cautious promotions.</p>
             </div>
         </div>
     </div>
@@ -228,9 +186,11 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/business_ai.css') }}">
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/business_ai.js') }}"></script>
 <script src="{{ url_for('static', filename='demos/forecasting.js') }}"></script>
 {% endblock %}

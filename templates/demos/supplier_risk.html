@@ -1,18 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Supplier Risk Assessment - MD ROKIBUL HASAN{% endblock %}
+{% block title %}Supplier Risk Radar - MD ROKIBUL HASAN{% endblock %}
 
 {% block content %}
-<!-- Demo Header -->
 <section class="demo-header">
     <div class="container">
         <div class="demo-breadcrumb">
-            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Intelligence</a>
         </div>
-        <h1 class="demo-page-title">Supplier Risk Assessment Tool</h1>
+        <h1 class="demo-page-title">Supplier Risk Radar</h1>
         <p class="demo-page-subtitle">
-            Comprehensive AI-driven risk management with demand forecasting, anomaly detection, route optimization, and
-            fraud detection
+            Surface supplier disruption risk, shipment exceptions, routing trade-offs, and suspicious transactions in a
+            format built for sourcing and operations decisions.
         </p>
         <div class="demo-meta-info">
             <span class="demo-tag"><i class="fas fa-tag"></i> Risk Management</span>
@@ -23,37 +22,33 @@
     </div>
 </section>
 
-<!-- Demo Tool Section -->
 <section class="demo-tool-section">
     <div class="container">
         <div class="demo-grid">
-            <!-- Left Panel - Configuration -->
             <div class="demo-panel">
                 <div class="panel-header">
                     <h2><i class="fas fa-sliders-h"></i> Configuration</h2>
                 </div>
                 <div class="panel-content">
                     <form id="riskAnalysisForm">
-                        <!-- Analysis Type -->
                         <div class="form-group">
                             <label for="analysisType">Analysis Type</label>
                             <select id="analysisType" name="analysis_type" class="form-control" required>
-                                <option value="all">All Analyses (Recommended)</option>
-                                <option value="forecasting">Risk Forecasting Only</option>
-                                <option value="anomaly">Anomaly Detection Only</option>
-                                <option value="routing">Route Optimization Only</option>
-                                <option value="fraud">Fraud Detection Only</option>
+                                <option value="all">All Views (Recommended)</option>
+                                <option value="forecasting">Supplier Exposure Only</option>
+                                <option value="anomaly">Shipment Alerts Only</option>
+                                <option value="routing">Route Decision Only</option>
+                                <option value="fraud">Transaction Review Only</option>
                             </select>
-                            <small>Choose which analyses to run</small>
+                            <small>Choose which operational view to run</small>
                         </div>
 
-                        <!-- Data Source -->
                         <div class="form-group">
                             <label>Data Source</label>
                             <div class="radio-group">
                                 <label class="radio-label">
                                     <input type="radio" name="use_sample_data" value="true" checked>
-                                    Use Sample Data (1000 suppliers)
+                                    Use Sample Data
                                 </label>
                                 <label class="radio-label">
                                     <input type="radio" name="use_sample_data" value="false">
@@ -62,16 +57,13 @@
                             </div>
                         </div>
 
-                        <!-- File Upload (hidden by default) -->
                         <div id="fileUploadSection" style="display: none;">
                             <div class="form-group">
                                 <label for="supplierFile">Supplier Data (CSV)</label>
-                                <input type="file" id="supplierFile" name="supplier_file" accept=".csv"
-                                    class="form-control-file">
+                                <input type="file" id="supplierFile" name="supplier_file" accept=".csv" class="form-control-file">
                             </div>
                         </div>
 
-                        <!-- Advanced Options -->
                         <div class="form-group">
                             <label>
                                 <input type="checkbox" id="showAdvanced"> Show Advanced Options
@@ -81,43 +73,38 @@
                         <div id="advancedOptions" style="display: none;">
                             <div class="form-group">
                                 <label for="contamination">
-                                    Anomaly Contamination: <span id="contaminationValue">10</span>%
+                                    Shipment Alert Sensitivity: <span id="contaminationValue">10</span>%
                                 </label>
                                 <input type="range" id="contamination" name="contamination" min="5" max="20" value="10"
                                     step="1" class="slider">
-                                <small>Expected % of anomalies in shipment data</small>
                             </div>
 
                             <div class="form-group">
                                 <label for="epochs">
-                                    Training Epochs: <span id="epochsValue">20</span>
+                                    Review Depth: <span id="epochsValue">20</span>
                                 </label>
                                 <input type="range" id="epochs" name="epochs" min="10" max="50" value="20" step="5"
                                     class="slider">
-                                <small>Neural network training iterations</small>
                             </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block" id="analyzeBtn">
-                            <i class="fas fa-shield-alt"></i> Run Risk Assessment
+                            <i class="fas fa-shield-alt"></i> Run Risk Radar
                         </button>
                     </form>
 
-                    <!-- Info Box -->
                     <div class="info-box">
-                        <h4><i class="fas fa-info-circle"></i> About This Tool</h4>
-                        <p>This comprehensive tool provides:</p>
+                        <h4><i class="fas fa-info-circle"></i> Business Use</h4>
                         <ul>
-                            <li><strong>Risk Forecasting</strong>: 4 ML models (LR, RF, XGBoost, MLP)</li>
-                            <li><strong>Anomaly Detection</strong>: Isolation Forest for disruptions</li>
-                            <li><strong>Route Optimization</strong>: Risk-aware routing</li>
-                            <li><strong>Fraud Detection</strong>: Deep learning classifier</li>
+                            <li><strong>Which suppliers need escalation first?</strong></li>
+                            <li><strong>Where are shipment disruptions building up?</strong></li>
+                            <li><strong>Which route is safest without overpaying?</strong></li>
+                            <li><strong>Which transactions deserve review right now?</strong></li>
                         </ul>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Panel - Summary Results -->
             <div class="demo-panel">
                 <div class="panel-header">
                     <h2><i class="fas fa-chart-bar"></i> Analysis Summary</h2>
@@ -125,8 +112,8 @@
                 <div class="panel-content">
                     <div id="loadingState" class="loading-state" style="display: none;">
                         <div class="spinner"></div>
-                        <p>Running comprehensive risk assessment...</p>
-                        <small>This may take 30-60 seconds for all analyses</small>
+                        <p>Running operational risk analysis...</p>
+                        <small>This may take longer when transaction review is included.</small>
                     </div>
 
                     <div id="errorState" class="error-state" style="display: none;">
@@ -135,13 +122,13 @@
                     </div>
 
                     <div id="resultsState" class="results-state" style="display: none;">
-                        <!-- Summary Content -->
+                        <div id="businessInsightContainer"></div>
                         <div id="summaryContent"></div>
                     </div>
 
                     <div id="initialState" class="initial-state">
                         <i class="fas fa-shield-alt"></i>
-                        <p>Configure analysis options and click "Run Risk Assessment" to begin</p>
+                        <p>Configure the radar and run the analysis to see priority actions.</p>
                     </div>
                 </div>
             </div>
@@ -149,29 +136,27 @@
     </div>
 </section>
 
-<!-- Full-Width Charts Section -->
 <section class="demo-tool-section">
     <div class="container">
         <div id="resultsCharts" class="full-width-charts" style="display: none;">
             <div class="charts-header-container">
-                <h2 class="section-title">Detailed Analysis Results</h2>
+                <h2 class="section-title">Operational Risk Views</h2>
                 <div class="results-tabs">
                     <button class="tab-btn active" data-tab="forecasting">
-                        <i class="fas fa-chart-line"></i> Risk Forecasting
+                        <i class="fas fa-chart-line"></i> Supplier Exposure
                     </button>
                     <button class="tab-btn" data-tab="anomaly">
-                        <i class="fas fa-exclamation-triangle"></i> Anomaly Detection
+                        <i class="fas fa-exclamation-triangle"></i> Shipment Alerts
                     </button>
                     <button class="tab-btn" data-tab="routing">
-                        <i class="fas fa-route"></i> Route Optimization
+                        <i class="fas fa-route"></i> Route Decision
                     </button>
                     <button class="tab-btn" data-tab="fraud">
-                        <i class="fas fa-user-shield"></i> Fraud Detection
+                        <i class="fas fa-user-shield"></i> Transaction Review
                     </button>
                 </div>
             </div>
 
-            <!-- Tab Contents -->
             <div class="tab-content active" id="forecastingTab"></div>
             <div class="tab-content" id="anomalyTab"></div>
             <div class="tab-content" id="routingTab"></div>
@@ -180,34 +165,29 @@
     </div>
 </section>
 
-<!-- Methodology Section -->
 <section class="how-it-works-section">
     <div class="container">
-        <h2 class="section-title">Methodology (Based on Research)</h2>
+        <h2 class="section-title">How To Use The Output</h2>
         <div class="steps-grid">
             <div class="step-card">
                 <div class="step-number">1</div>
-                <h3>Risk Forecasting</h3>
-                <p>4 ML models (Linear Regression, Random Forest, XGBoost, MLP) predict future demand and quantify
-                    supplier risk using MAE, MSE, and R² metrics</p>
+                <h3>Start With The Priority Actions</h3>
+                <p>Review the action list first to see whether the business should escalate suppliers, re-route logistics, or review procurement controls.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">2</div>
-                <h3>Anomaly Detection</h3>
-                <p>Isolation Forest identifies shipment disruptions by analyzing price spikes, delivery delays, and
-                    sentiment scores for early warning</p>
+                <h3>Check Exposure Concentration</h3>
+                <p>Use the supplier and shipment tabs to identify where disruption, delays, and service degradation are clustering.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">3</div>
-                <h3>Route Optimization</h3>
-                <p>Heuristic-based routing balances fuel costs, delays, and risk factors (weather, geopolitical) for
-                    optimal logistics</p>
+                <h3>Balance Route Risk And Cost</h3>
+                <p>Use the route decision tab to choose the safest route without ignoring time and fuel impact.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">4</div>
-                <h3>Fraud Detection</h3>
-                <p>Deep neural network with SMOTE balancing achieves >99% accuracy in identifying fraudulent procurement
-                    transactions</p>
+                <h3>Prioritize Transaction Review</h3>
+                <p>Use the transaction review tab to focus manual checks where procurement and payment exposure is highest.</p>
             </div>
         </div>
     </div>
@@ -217,9 +197,11 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='demos/supplier_risk.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/business_ai.css') }}">
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/business_ai.js') }}"></script>
 <script src="{{ url_for('static', filename='demos/supplier_risk.js') }}"></script>
 {% endblock %}

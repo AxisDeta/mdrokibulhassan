@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}AI Inventory Optimization - MD ROKIBUL HASAN{% endblock %}
+{% block title %}Inventory Planner - MD ROKIBUL HASAN{% endblock %}
 
 {% block content %}
 <!-- Demo Header -->
 <section class="demo-header">
     <div class="container">
         <div class="demo-breadcrumb">
-            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Intelligence</a>
         </div>
-        <h1 class="demo-page-title">AI Inventory Optimization Tool</h1>
+        <h1 class="demo-page-title">Inventory Planner</h1>
         <p class="demo-page-subtitle">
-            Comprehensive inventory analysis with demand forecasting (ETS + LightGBM), (s,S) policy optimization,
-            simulation, and model explainability
+            Translate demand history into replenishment guidance, service-level planning, and inventory actions that the
+            business can use immediately.
         </p>
         <div class="demo-meta-info">
             <span class="demo-tag"><i class="fas fa-tag"></i> Optimization</span>
@@ -94,13 +94,12 @@
                     <!-- Info Box -->
                     <div class="info-box">
                         <h4><i class="fas fa-info-circle"></i> About This Tool</h4>
-                        <p>This comprehensive tool provides:</p>
+                        <p>This business-facing tool helps you answer:</p>
                         <ul>
-                            <li><strong>Historical Analysis</strong>: Demand statistics and trends</li>
-                            <li><strong>Forecasting</strong>: ETS and LightGBM predictions</li>
-                            <li><strong>Inventory Policy</strong>: Optimal (s,S) parameters</li>
-                            <li><strong>Simulation</strong>: Test policy performance</li>
-                            <li><strong>Explainability</strong>: SHAP analysis and surrogate models</li>
+                            <li><strong>What should we reorder and when?</strong></li>
+                            <li><strong>How much buffer stock do we need?</strong></li>
+                            <li><strong>What service-level risk are we carrying?</strong></li>
+                            <li><strong>How will the current policy perform if demand continues?</strong></li>
                         </ul>
                     </div>
                 </div>
@@ -123,6 +122,7 @@
                     </div>
 
                     <div id="resultsState" class="results-state" style="display: none;">
+                        <div id="businessInsightContainer"></div>
                         <!-- Summary Content -->
                         <div id="summaryContent"></div>
                     </div>
@@ -145,19 +145,16 @@
                 <h2 class="section-title">Detailed Visualizations</h2>
                 <div class="results-tabs">
                     <button class="tab-btn active" data-tab="historical">
-                        <i class="fas fa-history"></i> Historical
+                        <i class="fas fa-history"></i> Demand History
                     </button>
                     <button class="tab-btn" data-tab="forecasting">
-                        <i class="fas fa-chart-line"></i> Forecasting
+                        <i class="fas fa-chart-line"></i> Demand Outlook
                     </button>
                     <button class="tab-btn" data-tab="policy">
-                        <i class="fas fa-boxes"></i> Policy
+                        <i class="fas fa-boxes"></i> Replenishment Plan
                     </button>
                     <button class="tab-btn" data-tab="simulation">
-                        <i class="fas fa-play-circle"></i> Simulation
-                    </button>
-                    <button class="tab-btn" data-tab="explainability">
-                        <i class="fas fa-brain"></i> Explainability
+                        <i class="fas fa-play-circle"></i> Service Risk
                     </button>
                 </div>
             </div>
@@ -167,7 +164,6 @@
             <div class="tab-content" id="forecastingTab"></div>
             <div class="tab-content" id="policyTab"></div>
             <div class="tab-content" id="simulationTab"></div>
-            <div class="tab-content" id="explainabilityTab"></div>
         </div>
     </div>
 </section>
@@ -175,33 +171,27 @@
 <!-- Methodology Section -->
 <section class="how-it-works-section">
     <div class="container">
-        <h2 class="section-title">Methodology (Based on Research)</h2>
+        <h2 class="section-title">How To Use The Output</h2>
         <div class="steps-grid">
             <div class="step-card">
                 <div class="step-number">1</div>
-                <h3>Historical Analysis</h3>
-                <p>Comprehensive demand statistics, distribution metrics, and time series visualization to understand
-                    patterns</p>
+                <h3>Read The Recommendations First</h3>
+                <p>Start with the action list to see whether you should buy earlier, raise safety stock, or simply monitor demand.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">2</div>
-                <h3>Demand Forecasting</h3>
-                <p>Dual approach: ETS (statistical) and LightGBM (ML) models with MAE, RMSE, and MAPE metrics</p>
+                <h3>Check The Replenishment Plan</h3>
+                <p>Use the reorder point, order-up-to level, and safety stock to align purchasing with the expected demand window.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">3</div>
-                <h3>Policy Optimization</h3>
-                <p>(s,S) inventory policy calculation with configurable lead time and service level parameters</p>
+                <h3>Review Service Risk</h3>
+                <p>Use the simulation outcomes to understand whether the planned inventory policy is likely to cause stockouts.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">4</div>
-                <h3>Simulation</h3>
-                <p>Test inventory policy performance with stockout detection and order frequency analysis</p>
-            </div>
-            <div class="step-card">
-                <div class="step-number">5</div>
-                <h3>Explainability</h3>
-                <p>SHAP analysis for feature importance and surrogate linear models for interpretability</p>
+                <h3>Turn Insight Into Action</h3>
+                <p>Use the policy and forecast together to decide whether to expedite supply, rebalance stock, or protect service levels.</p>
             </div>
         </div>
     </div>
@@ -211,9 +201,11 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='demos/inventory.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/business_ai.css') }}">
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/business_ai.js') }}"></script>
 <script src="{{ url_for('static', filename='demos/inventory.js') }}"></script>
 {% endblock %}

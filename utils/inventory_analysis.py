@@ -94,45 +94,35 @@ class InventoryAnalyzer:
             Dictionary with predictions, metrics, and visualization data
         """
         try:
-            # Split data
-            train = self.sku_df["demand"][:-forecast_days]
-            test = self.sku_df["demand"][-forecast_days:]
-            train_dates = self.sku_df["date"][:-forecast_days]
-            test_dates = self.sku_df["date"][-forecast_days:]
-            
-            # Train ETS model
+            demand = self.sku_df["demand"]
+            dates = self.sku_df["date"]
+
             ets = ExponentialSmoothing(
-                train,
+                demand,
                 trend="add",
                 seasonal="add",
                 seasonal_periods=7
             )
             ets_fit = ets.fit()
-            ets_forecast = ets_fit.forecast(len(test))
-            
-            # Calculate metrics
-            mae = float(np.mean(np.abs(test.values - ets_forecast)))
-            rmse = float(np.sqrt(np.mean((test.values - ets_forecast) ** 2)))
-            mape = float(np.mean(np.abs((test.values - ets_forecast) / (test.values + 1))) * 100)
-            
-            # Prepare visualization data (last 180 days of training + forecast)
-            display_days = min(180, len(train))
-            train_display = train.iloc[-display_days:]
-            train_dates_display = train_dates.iloc[-display_days:]
-            
+            future_forecast = ets_fit.forecast(forecast_days)
+
+            recent_days = min(120, len(demand))
+            recent_history = demand.iloc[-recent_days:]
+            recent_dates = dates.iloc[-recent_days:]
+            future_dates = pd.date_range(dates.iloc[-1] + pd.Timedelta(days=1), periods=forecast_days, freq='D')
+
             return {
                 'success': True,
-                'metrics': {
-                    'mae': mae,
-                    'rmse': rmse,
-                    'mape': mape
+                'summary': {
+                    'projected_total': float(np.sum(future_forecast)),
+                    'projected_average': float(np.mean(future_forecast)),
+                    'peak_forecast': float(np.max(future_forecast))
                 },
                 'visualization': {
-                    'train_dates': train_dates_display.dt.strftime('%Y-%m-%d').tolist(),
-                    'train_values': train_display.tolist(),
-                    'test_dates': test_dates.dt.strftime('%Y-%m-%d').tolist(),
-                    'test_actual': test.tolist(),
-                    'test_forecast': ets_forecast.tolist()
+                    'history_dates': recent_dates.dt.strftime('%Y-%m-%d').tolist(),
+                    'history_values': recent_history.tolist(),
+                    'future_dates': future_dates.strftime('%Y-%m-%d').tolist(),
+                    'future_forecast': future_forecast.tolist()
                 }
             }
         except Exception as e:
@@ -164,26 +154,18 @@ class InventoryAnalyzer:
             Dictionary with predictions, metrics, feature importance, and next-day prediction
         """
         try:
-            # Create features
             feat_df = self._create_features(self.sku_df)
-            
+
             if len(feat_df) < 50:
                 return {
                     'success': False,
                     'error': 'Insufficient data',
                     'message': 'Need at least 50 observations after feature engineering.'
                 }
-            
-            # Split data
-            train_feat = feat_df.iloc[:-forecast_days] if len(feat_df) > forecast_days else feat_df.iloc[:-28]
-            test_feat = feat_df.iloc[-forecast_days:] if len(feat_df) > forecast_days else feat_df.iloc[-28:]
-            
-            X_train = train_feat[self.feature_cols]
-            y_train = train_feat["demand"]
-            X_test = test_feat[self.feature_cols]
-            y_test = test_feat["demand"]
-            
-            # Train LightGBM
+
+            X_train = feat_df[self.feature_cols]
+            y_train = feat_df["demand"]
+
             self.lgb_model = lgb.LGBMRegressor(
                 n_estimators=200,
                 learning_rate=0.05,
@@ -192,39 +174,45 @@ class InventoryAnalyzer:
                 verbose=-1
             )
             self.lgb_model.fit(X_train, y_train)
-            
-            # Make predictions
-            lgb_predictions = self.lgb_model.predict(X_test)
-            
-            # Calculate metrics
-            mae = float(np.mean(np.abs(y_test.values - lgb_predictions)))
-            rmse = float(np.sqrt(np.mean((y_test.values - lgb_predictions) ** 2)))
-            mape = float(np.mean(np.abs((y_test.values - lgb_predictions) / (y_test.values + 1))) * 100)
-            
-            # Next-day prediction
-            X_full = feat_df[self.feature_cols]
-            next_day_pred = float(self.lgb_model.predict(X_full.iloc[-1:].values)[0])
-            
-            # Feature importance
-            feature_importance = {
-                'features': self.feature_cols,
-                'importances': self.lgb_model.feature_importances_.tolist()
-            }
-            
+
+            history_series = self.sku_df[['date', 'demand']].copy()
+            forecast_values = []
+            forecast_dates = []
+
+            for _ in range(forecast_days):
+                demand_series = history_series['demand'].astype(float)
+                next_date = history_series['date'].iloc[-1] + pd.Timedelta(days=1)
+                feature_row = pd.DataFrame([{
+                    'lag_1': float(demand_series.iloc[-1]),
+                    'lag_7': float(demand_series.iloc[-7]) if len(demand_series) >= 7 else float(demand_series.iloc[-1]),
+                    'lag_14': float(demand_series.iloc[-14]) if len(demand_series) >= 14 else float(demand_series.mean()),
+                    'rmean_7': float(demand_series.tail(7).mean()),
+                    'rmean_14': float(demand_series.tail(14).mean()),
+                    'rstd_7': float(demand_series.tail(7).std() or 0.0)
+                }], columns=self.feature_cols)
+
+                prediction = float(self.lgb_model.predict(feature_row)[0])
+                prediction = max(0.0, prediction)
+
+                forecast_values.append(prediction)
+                forecast_dates.append(next_date.strftime('%Y-%m-%d'))
+                history_series.loc[len(history_series)] = [next_date, prediction]
+
+            recent_days = min(120, len(self.sku_df))
+
             return {
                 'success': True,
-                'metrics': {
-                    'mae': mae,
-                    'rmse': rmse,
-                    'mape': mape,
-                    'next_day_forecast': next_day_pred
+                'summary': {
+                    'projected_total': float(np.sum(forecast_values)),
+                    'projected_average': float(np.mean(forecast_values)),
+                    'next_day_forecast': float(forecast_values[0]) if forecast_values else 0.0
                 },
                 'visualization': {
-                    'test_indices': list(range(len(y_test))),
-                    'test_actual': y_test.tolist(),
-                    'test_forecast': lgb_predictions.tolist()
-                },
-                'feature_importance': feature_importance
+                    'history_dates': self.sku_df['date'].iloc[-recent_days:].dt.strftime('%Y-%m-%d').tolist(),
+                    'history_values': self.sku_df['demand'].iloc[-recent_days:].tolist(),
+                    'future_dates': forecast_dates,
+                    'future_forecast': forecast_values
+                }
             }
         except Exception as e:
             return {

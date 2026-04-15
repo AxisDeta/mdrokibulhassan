@@ -1,265 +1,290 @@
 """
-Advanced Demand Forecasting Utilities
-Based on research: "Developing and implementing AI-driven models for demand forecasting in US supply chains"
-
-Features:
-- Multi-feature regression (20+ features)
-- Feature engineering: PCA, OneHotEncoding, MinMaxScaler
-- Models: Linear Regression, Random Forest
-- Evaluation: RMSE, MAE, R²
+Business-facing demand forecasting utilities.
 """
 
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from sklearn.decomposition import PCA
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
 from sklearn.pipeline import Pipeline
-import json
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
-# Expected features from research paper
-EXPECTED_FEATURES = [
-    'Product_ID', 'Category', 'Price', 'Promotion', 'Discount', 'Shelf_Life',
-    'Inventory_Level', 'Units_Sold', 'Stockouts', 'Lead_Time', 
-    'Supplier_Reliability', 'Month', 'Holiday', 'Temperature', 'Rainfall',
-    'GDP', 'Inflation_Rate', 'Unemployment_Rate', 'Customer_Age_Group',
-    'Customer_Income', 'Customer_Location', 'Lag_Sales_1'
-]
 
 CATEGORICAL_FEATURES = ['Category', 'Customer_Age_Group', 'Customer_Location']
-NUMERICAL_FEATURES = [f for f in EXPECTED_FEATURES if f not in CATEGORICAL_FEATURES + ['Product_ID']]
+
 
 def validate_dataset(df):
-    """Validate uploaded dataset has required columns"""
     if 'Target_Sales' not in df.columns:
-        return False, "CSV must have 'Target_Sales' column"
-    
-    # Check for at least some key features
+        return False, "CSV must include a 'Target_Sales' column."
+
     required_min = ['Price', 'Units_Sold', 'Month']
     missing = [col for col in required_min if col not in df.columns]
-    
     if missing:
         return False, f"Missing required columns: {', '.join(missing)}"
-    
+
+    if len(df) < 24:
+        return False, "Please upload at least 24 records so the forecast has enough history."
+
     return True, "Valid"
 
-def preprocess_data(df, variance_threshold=0.95):
-    """
-    Preprocess data following research methodology:
-    1. Handle missing values (mean imputation)
-    2. Encode categorical variables (OneHotEncoding)
-    3. Normalize features (MinMaxScaler)
-    4. Apply PCA for dimensionality reduction
-    """
-    try:
-        # Separate target and features
-        if 'Target_Sales' not in df.columns:
-            return None, "Target_Sales column not found"
-        
-        y = df['Target_Sales'].values
-        X = df.drop(['Target_Sales'], axis=1)
-        
-        # Drop Product_ID if present (not used for modeling)
-        if 'Product_ID' in X.columns:
-            X = X.drop(['Product_ID'], axis=1)
-        
-        # Identify categorical and numerical columns in the dataset
-        categorical_cols = [col for col in X.columns if col in CATEGORICAL_FEATURES]
-        numerical_cols = [col for col in X.columns if col not in categorical_cols]
-        
-        # Handle missing values in numerical columns (mean imputation)
-        for col in numerical_cols:
-            if X[col].isnull().any():
-                X[col].fillna(X[col].mean(), inplace=True)
-        
-        # Create preprocessing pipeline
-        preprocessor = ColumnTransformer(
-            transformers=[
-                ('num', MinMaxScaler(), numerical_cols),
-                ('cat', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore'), categorical_cols)
-            ],
-            remainder='passthrough'
-        )
-        
-        # Fit and transform
-        X_processed = preprocessor.fit_transform(X)
-        
-        # Apply PCA to retain 95% variance (as per research)
-        pca = PCA(n_components=variance_threshold)
-        X_pca = pca.fit_transform(X_processed)
-        
-        # Get feature importance info
-        n_components = pca.n_components_
-        explained_variance = pca.explained_variance_ratio_
-        cumulative_variance = np.cumsum(explained_variance)
-        
-        preprocessing_info = {
-            'original_features': len(X.columns),
-            'processed_features': X_processed.shape[1],
-            'pca_components': n_components,
-            'variance_retained': float(cumulative_variance[-1]),
-            'categorical_features': categorical_cols,
-            'numerical_features': numerical_cols
-        }
-        
-        return {
-            'X': X_pca,
-            'y': y,
-            'preprocessor': preprocessor,
-            'pca': pca,
-            'info': preprocessing_info
-        }, None
-        
-    except Exception as e:
-        return None, str(e)
 
-def train_models(X, y, test_size=0.2, random_state=42):
-    """
-    Train Linear Regression and Random Forest models
-    Returns trained models and evaluation metrics
-    """
-    try:
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=random_state
-        )
-        
-        # Initialize models
-        models = {
-            'Linear Regression': LinearRegression(),
-            'Random Forest': RandomForestRegressor(
-                n_estimators=100,
-                max_depth=10,
-                random_state=random_state,
-                n_jobs=-1
-            )
-        }
-        
-        results = {}
-        
-        for name, model in models.items():
-            # Train model
-            model.fit(X_train, y_train)
-            
-            # Make predictions
-            y_pred_train = model.predict(X_train)
-            y_pred_test = model.predict(X_test)
-            
-            # Calculate metrics
-            train_metrics = {
-                'RMSE': float(np.sqrt(mean_squared_error(y_train, y_pred_train))),
-                'MAE': float(mean_absolute_error(y_train, y_pred_train)),
-                'R2': float(r2_score(y_train, y_pred_train))
-            }
-            
-            test_metrics = {
-                'RMSE': float(np.sqrt(mean_squared_error(y_test, y_pred_test))),
-                'MAE': float(mean_absolute_error(y_test, y_pred_test)),
-                'R2': float(r2_score(y_test, y_pred_test))
-            }
-            
-            results[name] = {
-                'model': model,
-                'train_metrics': train_metrics,
-                'test_metrics': test_metrics,
-                'predictions': {
-                    'y_test': y_test.tolist()[:50],  # First 50 for visualization
-                    'y_pred': y_pred_test.tolist()[:50]
-                }
-            }
-        
-        return results, None
-        
-    except Exception as e:
-        return None, str(e)
+def sanitize_for_json(obj):
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_for_json(v) for v in obj]
+    if isinstance(obj, tuple):
+        return [sanitize_for_json(v) for v in obj]
+    if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+        return int(obj)
+    if isinstance(obj, (np.float64, np.float32, np.float16)):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return sanitize_for_json(obj.tolist())
+    return obj
 
-def process_demand_forecast(file_content):
-    """
-    Main processing function for demand forecasting
-    """
+
+def _coerce_numeric(value, default=0.0):
     try:
-        # Read CSV
+        if pd.isna(value):
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+
+def _build_preprocessor(X: pd.DataFrame):
+    categorical_cols = [col for col in X.columns if col in CATEGORICAL_FEATURES]
+    numerical_cols = [col for col in X.columns if col not in categorical_cols]
+
+    numeric_pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', MinMaxScaler())
+    ])
+
+    categorical_pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')),
+        ('encoder', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore'))
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numeric_pipeline, numerical_cols),
+            ('cat', categorical_pipeline, categorical_cols)
+        ]
+    )
+
+    return preprocessor, numerical_cols, categorical_cols
+
+
+def _validation_split_size(record_count: int) -> int:
+    proposed = max(6, int(round(record_count * 0.2)))
+    return min(proposed, max(6, record_count - 6))
+
+
+def _evaluate_models(X: pd.DataFrame, y: pd.Series):
+    validation_size = _validation_split_size(len(X))
+    split_index = len(X) - validation_size
+
+    X_train = X.iloc[:split_index].copy()
+    X_valid = X.iloc[split_index:].copy()
+    y_train = y.iloc[:split_index].copy()
+    y_valid = y.iloc[split_index:].copy()
+
+    preprocessor, numerical_cols, categorical_cols = _build_preprocessor(X_train)
+    X_train_processed = preprocessor.fit_transform(X_train)
+    X_valid_processed = preprocessor.transform(X_valid)
+
+    pca = PCA(n_components=0.95, svd_solver='full')
+    X_train_reduced = pca.fit_transform(X_train_processed)
+    X_valid_reduced = pca.transform(X_valid_processed)
+
+    models = {
+        'Linear Regression': LinearRegression(),
+        'Random Forest': RandomForestRegressor(
+            n_estimators=120,
+            max_depth=10,
+            random_state=42,
+            n_jobs=-1
+        )
+    }
+
+    evaluations = {}
+    best_model_name = None
+    best_mae = None
+
+    for model_name, model in models.items():
+        model.fit(X_train_reduced, y_train)
+        valid_predictions = model.predict(X_valid_reduced)
+        mae = float(mean_absolute_error(y_valid, valid_predictions))
+        evaluations[model_name] = {'mae': mae}
+
+        if best_mae is None or mae < best_mae:
+            best_mae = mae
+            best_model_name = model_name
+
+    full_preprocessor, full_numerical_cols, full_categorical_cols = _build_preprocessor(X)
+    X_full_processed = full_preprocessor.fit_transform(X)
+    full_pca = PCA(n_components=0.95, svd_solver='full')
+    X_full_reduced = full_pca.fit_transform(X_full_processed)
+    best_model = models[best_model_name]
+    best_model.fit(X_full_reduced, y)
+
+    preprocessing_info = {
+        'original_features': len(X.columns),
+        'processed_features': int(X_full_processed.shape[1]),
+        'pca_components': int(full_pca.n_components_),
+        'variance_retained': float(full_pca.explained_variance_ratio_.sum()),
+        'categorical_features': categorical_cols,
+        'numerical_features': numerical_cols
+    }
+
+    return {
+        'model_name': best_model_name,
+        'model': best_model,
+        'preprocessor': full_preprocessor,
+        'pca': full_pca,
+        'evaluations': evaluations,
+        'validation_size': validation_size,
+        'preprocessing_info': preprocessing_info
+    }
+
+
+def _build_future_rows(feature_frame: pd.DataFrame, history_sales: list[float], forecast_horizon: int):
+    last_row = feature_frame.iloc[-1].copy()
+    month_anchor = int(_coerce_numeric(last_row['Month'], 1)) if 'Month' in feature_frame.columns else None
+    future_rows = []
+
+    for step in range(1, forecast_horizon + 1):
+        next_row = last_row.copy()
+
+        if 'Lag_Sales_1' in feature_frame.columns:
+            next_row['Lag_Sales_1'] = history_sales[-1]
+
+        if 'Units_Sold' in feature_frame.columns:
+            next_row['Units_Sold'] = history_sales[-1]
+
+        if 'Month' in feature_frame.columns and month_anchor is not None:
+            next_row['Month'] = ((month_anchor - 1 + step) % 12) + 1
+
+        if 'Holiday' in feature_frame.columns and 'Month' in feature_frame.columns:
+            next_row['Holiday'] = 1 if int(next_row['Month']) in {11, 12} else 0
+
+        if 'Inventory_Level' in feature_frame.columns:
+            current_inventory = _coerce_numeric(next_row['Inventory_Level'], history_sales[-1] * 1.5)
+            next_row['Inventory_Level'] = max(current_inventory - history_sales[-1] * 0.15, 0)
+
+        future_rows.append(next_row.to_dict())
+        last_row = next_row
+
+    return pd.DataFrame(future_rows, columns=feature_frame.columns)
+
+
+def _forecast_future(feature_frame: pd.DataFrame, target_sales: pd.Series, trained):
+    history_sales = target_sales.astype(float).tolist()
+    future_rows = _build_future_rows(feature_frame, history_sales, trained['forecast_horizon'])
+    forecasts = []
+
+    for row_index in range(len(future_rows)):
+        row_df = future_rows.iloc[[row_index]].copy()
+        transformed = trained['preprocessor'].transform(row_df)
+        reduced = trained['pca'].transform(transformed)
+        prediction = float(trained['model'].predict(reduced)[0])
+        prediction = max(0.0, prediction)
+        forecasts.append(prediction)
+
+        history_sales.append(prediction)
+        if row_index + 1 < len(future_rows):
+            if 'Lag_Sales_1' in future_rows.columns:
+                future_rows.at[row_index + 1, 'Lag_Sales_1'] = prediction
+            if 'Units_Sold' in future_rows.columns:
+                future_rows.at[row_index + 1, 'Units_Sold'] = prediction
+
+    return forecasts
+
+
+def process_demand_forecast(file_content, forecast_horizon=12):
+    try:
         df = pd.read_csv(file_content)
-        
-        # Validate dataset
         is_valid, message = validate_dataset(df)
         if not is_valid:
             return {'error': message}
-        
-        # Get basic statistics
-        stats = {
-            'total_records': int(len(df)),
-            'target_mean': float(df['Target_Sales'].mean()),
-            'target_std': float(df['Target_Sales'].std()),
-            'target_min': float(df['Target_Sales'].min()),
-            'target_max': float(df['Target_Sales'].max()),
-            'features_count': int(len(df.columns) - 1)  # Excluding Target_Sales
-        }
-        
-        # Preprocess data
-        preprocessed, error = preprocess_data(df)
-        if error:
-            return {'error': f'Preprocessing error: {error}'}
-        
-        # Ensure preprocessing info uses native types
-        preprocessing_info = preprocessed['info']
-        preprocessing_info['original_features'] = int(preprocessing_info['original_features'])
-        preprocessing_info['processed_features'] = int(preprocessing_info['processed_features'])
-        preprocessing_info['pca_components'] = int(preprocessing_info['pca_components'])
-        
-        # Train models
-        model_results, error = train_models(preprocessed['X'], preprocessed['y'])
-        if error:
-            return {'error': f'Training error: {error}'}
-        
-        # Prepare response
+
+        forecast_horizon = max(4, min(int(forecast_horizon or 12), 24))
+        history = df.copy()
+        target_sales = history['Target_Sales'].astype(float)
+        feature_frame = history.drop(columns=['Target_Sales']).copy()
+        if 'Product_ID' in feature_frame.columns:
+            feature_frame = feature_frame.drop(columns=['Product_ID'])
+
+        trained = _evaluate_models(feature_frame, target_sales)
+        trained['forecast_horizon'] = forecast_horizon
+        future_forecast = _forecast_future(feature_frame, target_sales, trained)
+
+        recent_window = min(18, len(target_sales))
+        recent_history = target_sales.tail(recent_window).tolist()
+        baseline_window = min(12, len(target_sales))
+        baseline_mean = float(target_sales.tail(baseline_window).mean())
+        projected_total = float(np.sum(future_forecast))
+        projected_average = float(np.mean(future_forecast))
+        peak_index = int(np.argmax(future_forecast))
+        trough_index = int(np.argmin(future_forecast))
+        trend_percent = float(((projected_average - baseline_mean) / baseline_mean) * 100) if baseline_mean else 0.0
+        volatility_percent = float((np.std(future_forecast) / projected_average) * 100) if projected_average else 0.0
+
+        if abs(trend_percent) >= 15 or volatility_percent >= 20:
+            planning_risk = 'High'
+        elif abs(trend_percent) >= 8 or volatility_percent >= 12:
+            planning_risk = 'Medium'
+        else:
+            planning_risk = 'Monitor'
+
         response = {
             'success': True,
-            'stats': stats,
-            'preprocessing': preprocessed['info'],
-            'models': {}
-        }
-        
-        # Add model results (without the model objects)
-        for model_name, result in model_results.items():
-            response['models'][model_name] = {
-                'train_metrics': result['train_metrics'],
-                'test_metrics': result['test_metrics'],
-                'predictions': result['predictions']
+            'stats': {
+                'total_records': int(len(df)),
+                'features_count': int(len(feature_frame.columns)),
+                'historical_average': baseline_mean,
+                'historical_peak': float(target_sales.max())
+            },
+            'preprocessing': trained['preprocessing_info'],
+            'forecast_horizon': forecast_horizon,
+            'historical': {
+                'labels': [f'H-{recent_window - idx - 1}' for idx in range(recent_window)],
+                'values': recent_history
+            },
+            'forecast': {
+                'labels': [f'P+{idx + 1}' for idx in range(forecast_horizon)],
+                'values': future_forecast,
+                'projected_total': projected_total,
+                'projected_average': projected_average,
+                'peak_period': f'P+{peak_index + 1}',
+                'peak_value': float(future_forecast[peak_index]),
+                'low_period': f'P+{trough_index + 1}',
+                'low_value': float(future_forecast[trough_index]),
+                'trend_percent': trend_percent,
+                'volatility_percent': volatility_percent,
+                'planning_risk': planning_risk,
+                'best_fit_window': int(trained['validation_size'])
             }
-        
-        return sanitize_for_json(response)
-        
-    except Exception as e:
-        return {'error': f'Processing error: {str(e)}'}
+        }
 
-def sanitize_for_json(obj):
-    """Recursively convert numpy types to Python native types for JSON serialization"""
-    if isinstance(obj, dict):
-        return {k: sanitize_for_json(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [sanitize_for_json(v) for v in obj]
-    elif isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
-        return int(obj)
-    elif isinstance(obj, (np.float64, np.float32, np.float16)):
-        return float(obj)
-    elif isinstance(obj, np.ndarray):
-        return sanitize_for_json(obj.tolist())
-    else:
-        return obj
+        return sanitize_for_json(response)
+    except Exception as exc:
+        return {'error': f'Processing error: {str(exc)}'}
+
 
 def generate_sample_dataset(n_samples=1000):
-    """Generate sample dataset matching research paper structure"""
     np.random.seed(42)
-    
+
     categories = ['Electronics', 'Clothing', 'Food', 'Home', 'Sports']
     age_groups = ['18-25', '26-35', '36-45', '46-55', '56+']
     locations = ['Urban', 'Suburban', 'Rural']
-    
+
     data = {
         'Product_ID': range(1, n_samples + 1),
         'Category': np.random.choice(categories, n_samples),
@@ -284,8 +309,7 @@ def generate_sample_dataset(n_samples=1000):
         'Customer_Location': np.random.choice(locations, n_samples),
         'Lag_Sales_1': np.random.randint(0, 500, n_samples)
     }
-    
-    # Generate Target_Sales with some correlation to features
+
     target_sales = (
         data['Price'] * 0.5 +
         data['Units_Sold'] * 2 +
@@ -294,8 +318,8 @@ def generate_sample_dataset(n_samples=1000):
         data['Inventory_Level'] * 0.1 +
         np.random.normal(0, 50, n_samples)
     )
-    
+
     data['Target_Sales'] = np.maximum(0, target_sales)
-    
+
     df = pd.DataFrame(data)
     return df.to_csv(index=False)

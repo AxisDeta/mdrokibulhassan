@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Blockchain Retail Cybersecurity - MD ROKIBUL HASAN{% endblock %}
+{% block title %}Blockchain Supply Chain Security - MD ROKIBUL HASAN{% endblock %}
 
 {% block content %}
 <!-- Demo Header -->
 <section class="demo-header">
     <div class="container">
         <div class="demo-breadcrumb">
-            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Demos</a>
+            <a href="{{ url_for('demos.demos_landing') }}"><i class="fas fa-arrow-left"></i> All Intelligence</a>
         </div>
-        <h1 class="demo-page-title">Blockchain Retail Cybersecurity</h1>
+        <h1 class="demo-page-title">Blockchain Supply Chain Security</h1>
         <p class="demo-page-subtitle">
-            Securing the retail supply chain with immutable ledgers and automated phishing detection systems.
+            See how ledger integrity and phishing prevention translate into real operational protection for the supply chain.
         </p>
         <div class="demo-meta-info">
             <span class="demo-tag"><i class="fas fa-shield-alt"></i> Cybersecurity</span>
@@ -93,6 +93,7 @@
                     </div>
 
                     <div id="resultsState" class="results-state" style="display: none;">
+                        <div id="businessInsightContainer"></div>
                         <!-- Simulation Summary -->
                         <div id="simulationSummary">
                             <div class="summary-grid">
@@ -137,29 +138,27 @@
 <!-- Methodology Section -->
 <section class="how-it-works-section">
     <div class="container">
-        <h2 class="section-title">Case Scenario: Phishing Mitigation</h2>
+        <h2 class="section-title">How To Use The Output</h2>
         <div class="steps-grid">
             <div class="step-card">
                 <div class="step-icon"><i class="fas fa-random"></i></div>
-                <h3>1. Random Generation</h3>
-                <p>Using Mersenne Twister to simulate 2,000 retail messages with ~50.75% malicious content.</p>
+                <h3>1. Measure Threat Pressure</h3>
+                <p>Use the simulation to understand how much malicious traffic the operation may be absorbing.</p>
             </div>
             <div class="step-card">
                 <div class="step-icon"><i class="fas fa-fingerprint"></i></div>
-                <h3>2. SHA256 Fingerprinting</h3>
-                <p>Each message is hashed into the blockchain. Any tampering breaks the cryptographic signatures.</p>
+                <h3>2. Verify Chain Integrity</h3>
+                <p>Use the ledger to confirm that supply chain records remain tamper-evident and traceable.</p>
             </div>
             <div class="step-card">
                 <div class="step-icon"><i class="fas fa-search-shield"></i></div>
-                <h3>3. Automated Detection</h3>
-                <p>System compares incoming message hashes against the verified vendor ledger to block unauthorized
-                    senders.</p>
+                <h3>3. Interpret The Response</h3>
+                <p>Use the action guidance to decide whether the business should focus on vendor controls, record verification, or fraud-prevention processes.</p>
             </div>
             <div class="step-card">
                 <div class="step-icon"><i class="fas fa-user-check"></i></div>
-                <h3>4. 100% Mitigation</h3>
-                <p>As proved in the experiment, blockchain reduces the risk of phishing success to zero through
-                    verification.</p>
+                <h3>4. Protect Business Trust</h3>
+                <p>Use the results to support supplier trust, transaction validation, and partner-accountability decisions.</p>
             </div>
         </div>
     </div>
@@ -169,6 +168,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='demos/forecasting.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='demos/blockchain.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='demos/business_ai.css') }}">
 <style>
     .lab-tabs {
         display: flex;
@@ -336,5 +336,6 @@
 
 {% block extra_js %}
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="{{ url_for('static', filename='demos/business_ai.js') }}"></script>
 <script src="{{ url_for('static', filename='demos/blockchain.js') }}"></script>
 {% endblock %}

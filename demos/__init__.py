@@ -1,42 +1,51 @@
 """
 Demos Blueprint - Supply Chain Interactive Demos
 """
-from flask import Blueprint, render_template, request, jsonify
+import time
+
+from flask import Blueprint, render_template, request, jsonify, session
 import pandas as pd
 import numpy as np
 from io import StringIO
+from sqlalchemy import func
+
+from models import Publication
+from utils.demo_ai import generate_business_insight, gemini_enabled
 
 demos_bp = Blueprint('demos', __name__, url_prefix='/demos')
 
 DEMO_DEFINITIONS = [
     {
         'id': 'demand-forecasting',
-        'title': 'AI Demand Forecasting Tool',
-        'description': 'Upload historical sales data and get AI-powered demand forecasts with multiple ML models.',
+        'title': 'Demand Forecaster',
+        'description': 'Upload historical sales data to project future demand, interpret the outlook, and plan the next move.',
         'category': 'AI & Machine Learning',
         'icon': 'fa-chart-line',
         'color': '#3b82f6',
-        'paper_id': 11,  # Developing and implementing AI-driven models for demand forecasting
+        'paper_lookup': 'demand forecasting in us supply chains',
+        'legacy_paper_id': 11,
         'status': 'active'
     },
     {
         'id': 'inventory-optimization',
-        'title': 'AI Inventory Optimization Calculator',
-        'description': 'Calculate optimal inventory levels using AI to minimize costs while meeting demand.',
+        'title': 'Inventory Planner',
+        'description': 'Turn demand signals into replenishment guidance, service-risk visibility, and clearer inventory decisions.',
         'category': 'Optimization',
         'icon': 'fa-boxes',
         'color': '#10b981',
-        'paper_id': 21,  # AI-Powered Inventory Optimization Models
+        'paper_lookup': 'inventory optimization models',
+        'legacy_paper_id': 21,
         'status': 'active'
     },
     {
         'id': 'supplier-risk',
-        'title': 'Supplier Risk Assessment Tool',
-        'description': 'Evaluate and score supplier risk using data-driven AI models.',
+        'title': 'Supplier Risk Radar',
+        'description': 'Surface supplier exposure, shipment alerts, route trade-offs, and transaction risks that need attention first.',
         'category': 'Risk Management',
         'icon': 'fa-shield-alt',
         'color': '#f59e0b',
-        'paper_id': 20,  # Building Robust AI and ML Models for Supplier Risk Management
+        'paper_lookup': 'supplier risk management',
+        'legacy_paper_id': 20,
         'status': 'active'
     },
     {
@@ -46,17 +55,19 @@ DEMO_DEFINITIONS = [
         'category': 'Security',
         'icon': 'fa-link',
         'color': '#8b5cf6',
-        'paper_id': 2,  # Blockchain applications in retail cybersecurity
+        'paper_lookup': 'blockchain applications in retail cybersecurity',
+        'legacy_paper_id': 2,
         'status': 'active'
     },
     {
         'id': 'carbon-optimizer',
         'title': 'Carbon Reduction Calculator',
-        'description': 'Analyze operations and get ML-powered carbon reduction strategies using Walmart (2019-2021) data and Random Forest.',
+        'description': 'Compare current emissions with a lower-carbon operating plan and focus on the changes with the strongest reduction potential.',
         'category': 'Sustainability',
         'icon': 'fa-leaf',
         'color': '#10b981',
-        'paper_id': 13,  # Predictive analytics for sustainable supply chain operations
+        'paper_lookup': 'sustainable supply chain operations',
+        'legacy_paper_id': 13,
         'status': 'active'
     },
     {
@@ -66,7 +77,8 @@ DEMO_DEFINITIONS = [
         'category': 'Sustainability',
         'icon': 'fa-balance-scale',
         'color': '#14b8a6',
-        'paper_id': 8,  # Optimizing sustainable supply chains
+        'paper_lookup': 'optimizing sustainable supply chains',
+        'legacy_paper_id': 8,
         'status': 'active'
     },
     {
@@ -76,17 +88,127 @@ DEMO_DEFINITIONS = [
         'category': 'Optimization',
         'icon': 'fa-route',
         'color': '#06b6d4',
-        'paper_id': 12,  # Designing and Deploying AI Models for Sustainable Logistics
+        'paper_lookup': 'sustainable logistics optimization',
+        'legacy_paper_id': 12,
+        'status': 'coming_soon'
+    },
+    {
+        'id': 'quantum-predictive-analytics',
+        'title': 'Quantum Scenario Forecaster',
+        'description': 'Preview a next-generation forecasting capability that combines quantum acceleration with AI planning workflows.',
+        'category': 'Advanced Analytics',
+        'icon': 'fa-atom',
+        'color': '#6366f1',
+        'paper_lookup': 'leveraging quantum computing and ai for predictive analytics',
+        'status': 'coming_soon'
+    },
+    {
+        'id': 'green-blockchain-logistics',
+        'title': 'Green Logistics Ledger',
+        'description': 'See how traceability, optimization, and sustainability can work together in a greener logistics operation.',
+        'category': 'Sustainable Systems',
+        'icon': 'fa-network-wired',
+        'color': '#0f766e',
+        'paper_lookup': 'integrating blockchain with ai to develop green logistics models',
+        'status': 'coming_soon'
+    },
+    {
+        'id': 'predictive-supplier-analytics',
+        'title': 'Supplier Risk Radar',
+        'description': 'Preview an expanded supplier intelligence workflow for anticipating disruption, performance drift, and sourcing risk.',
+        'category': 'Risk Management',
+        'icon': 'fa-magnifying-glass-chart',
+        'color': '#f97316',
+        'paper_lookup': 'advanced predictive supplier analytics using machine learning',
+        'status': 'coming_soon'
+    },
+    {
+        'id': 'inventory-iot',
+        'title': 'Live Inventory Tracker',
+        'description': 'Monitor inventory conditions in real time with sensor-driven signals and faster replenishment decisions.',
+        'category': 'Inventory Intelligence',
+        'icon': 'fa-tower-cell',
+        'color': '#0891b2',
+        'paper_lookup': 'real-time inventory management with ai and iot',
+        'status': 'coming_soon'
+    },
+    {
+        'id': 'resilient-supply-networks',
+        'title': 'Supply Chain Resilience Mapper',
+        'description': 'Test resilience scenarios for supply networks facing volatility, disruption, and changing service expectations.',
+        'category': 'Network Design',
+        'icon': 'fa-diagram-project',
+        'color': '#7c3aed',
+        'paper_lookup': 'modeling resilient supply chain networks with ai',
+        'status': 'coming_soon'
+    },
+    {
+        'id': 'autonomous-route-networks',
+        'title': 'Autonomous Route Planner',
+        'description': 'Evaluate how autonomous planning systems can improve route efficiency, service reliability, and network responsiveness.',
+        'category': 'Autonomous Operations',
+        'icon': 'fa-truck-fast',
+        'color': '#0ea5e9',
+        'paper_lookup': 'autonomous supply chain networks with ai-driven route optimization',
         'status': 'coming_soon'
     }
 ]
 
 DEMO_BY_ID = {demo['id']: demo for demo in DEMO_DEFINITIONS}
 
+
+def resolve_demo_paper_id(demo):
+    """Resolve a publication by title fragment, with a legacy ID fallback."""
+    paper_lookup = demo.get('paper_lookup')
+    if paper_lookup:
+        publication = (
+            Publication.query
+            .filter(func.lower(Publication.title).contains(paper_lookup.lower()))
+            .order_by(Publication.year.desc(), Publication.id.desc())
+            .first()
+        )
+        if publication:
+            return publication.id
+
+    return demo.get('legacy_paper_id')
+
+
+def hydrate_demo(demo):
+    """Attach resolved paper metadata used by templates."""
+    hydrated_demo = demo.copy()
+    hydrated_demo['paper_id'] = resolve_demo_paper_id(demo)
+    hydrated_demo['has_research_link'] = hydrated_demo['paper_id'] is not None
+    return hydrated_demo
+
+
+def get_demo(demo_id):
+    return hydrate_demo(DEMO_BY_ID[demo_id])
+
+
+def check_business_ai_rate_limit() -> str | None:
+    now = time.time()
+    count_key = 'demo_ai_request_count'
+    reset_key = 'demo_ai_reset_at'
+
+    if count_key not in session:
+        session[count_key] = 0
+        session[reset_key] = now
+
+    if now - float(session.get(reset_key, now)) > 300:
+        session[count_key] = 0
+        session[reset_key] = now
+
+    if int(session.get(count_key, 0)) >= 12:
+        return 'AI interpretation rate limit reached. Please wait a few minutes and try again.'
+
+    session[count_key] = int(session.get(count_key, 0)) + 1
+    return None
+
 @demos_bp.route('/')
 def demos_landing():
     """Demos landing page showing all available demos"""
-    return render_template('demos/demos_landing.html', demos=DEMO_DEFINITIONS)
+    demos = [hydrate_demo(demo) for demo in DEMO_DEFINITIONS]
+    return render_template('demos/demos_landing.html', demos=demos)
 
 @demos_bp.route('/demand-forecasting', methods=['GET', 'POST'])
 def demand_forecasting():
@@ -108,11 +230,12 @@ def demand_forecasting():
             # Process the forecast using advanced system
             from demos.forecasting_utils import process_demand_forecast
             from io import StringIO
+            forecast_horizon = request.form.get('forecast_horizon', type=int, default=12)
             
             # Read file content
             file_content = StringIO(file.read().decode('utf-8'))
             
-            result = process_demand_forecast(file_content)
+            result = process_demand_forecast(file_content, forecast_horizon=forecast_horizon)
             
             if 'error' in result:
                 return jsonify(result), 400
@@ -125,7 +248,7 @@ def demand_forecasting():
     # GET request - show the form
     return render_template(
         'demos/demand_forecasting.html',
-        related_paper_id=DEMO_BY_ID['demand-forecasting']['paper_id']
+        related_paper_id=get_demo('demand-forecasting')['paper_id']
     )
 
 @demos_bp.route('/demand-forecasting/sample-data')
@@ -145,6 +268,33 @@ def download_sample_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@demos_bp.route('/api/business-insight', methods=['POST'])
+def business_insight_api():
+    payload = request.get_json(silent=True) or {}
+    demo_id = str(payload.get('demo_id') or '').strip()
+    context = payload.get('context') or {}
+    fallback = payload.get('fallback') or {}
+
+    if not demo_id:
+        return jsonify({'error': 'demo_id is required'}), 400
+
+    if not isinstance(context, dict):
+        return jsonify({'error': 'context must be an object'}), 400
+
+    limit_error = check_business_ai_rate_limit()
+    if limit_error:
+        return jsonify({'error': limit_error}), 429
+
+    demo = DEMO_BY_ID.get(demo_id, {'title': demo_id.replace('-', ' ').title()})
+    insight = generate_business_insight(demo.get('title', demo_id), context, fallback=fallback)
+
+    return jsonify({
+        'success': True,
+        'gemini_enabled': gemini_enabled(),
+        'insight': insight
+    })
+
 @demos_bp.route('/inventory-optimization')
 def inventory_optimization():
     """AI Inventory Optimization Tool - Comprehensive Inventory Analysis"""
@@ -155,7 +305,7 @@ def inventory_optimization():
         return render_template(
             'demos/inventory_optimization.html',
             skus=skus,
-            related_paper_id=DEMO_BY_ID['inventory-optimization']['paper_id']
+            related_paper_id=get_demo('inventory-optimization')['paper_id']
         )
     except Exception as e:
         # If data file doesn't exist, show template with error
@@ -163,7 +313,7 @@ def inventory_optimization():
             'demos/inventory_optimization.html',
             skus=[],
             error=str(e),
-            related_paper_id=DEMO_BY_ID['inventory-optimization']['paper_id']
+            related_paper_id=get_demo('inventory-optimization')['paper_id']
         )
 
 @demos_bp.route('/api/inventory-analysis', methods=['POST'])
@@ -209,15 +359,6 @@ def inventory_analysis_api():
         S = policy['parameters']['S']
         results['simulation'] = analyzer.simulate_inventory(s, S, lead_time, sim_days)
         
-        # Generate explainability (only if LightGBM was successful)
-        if results['lgb_forecast'].get('success'):
-            results['explainability'] = analyzer.explain_model()
-        else:
-            results['explainability'] = {
-                'success': False,
-                'message': 'Explainability requires successful LightGBM training'
-            }
-        
         return jsonify(results)
         
     except FileNotFoundError:
@@ -239,7 +380,7 @@ def supplier_risk():
     """Render supplier risk assessment tool"""
     return render_template(
         'demos/supplier_risk.html',
-        related_paper_id=DEMO_BY_ID['supplier-risk']['paper_id']
+        related_paper_id=get_demo('supplier-risk')['paper_id']
     )
 
 
@@ -321,9 +462,18 @@ def supplier_risk_analysis_api():
                     transaction_df = generate_transaction_data(10000)
             
             epochs = int(request.form.get('epochs', 20))
-            results['fraud'] = analyzer.detect_fraud(transaction_df, epochs)
-        
-        return jsonify(results)
+            try:
+                results['fraud'] = analyzer.detect_fraud(transaction_df, epochs)
+            except Exception as fraud_err:
+                # If fraud detection fails, log but continue with other results
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f'Fraud detection analysis failed: {str(fraud_err)}')
+                results['fraud'] = {
+                    'error': f'Fraud detection unavailable: {str(fraud_err)}',
+                    'metrics': None,
+                    'warning': 'Fraud detection module is currently unavailable. This is not a critical error.'
+                }
         
         return jsonify(results)
         
@@ -344,7 +494,7 @@ def blockchain_security():
     """Render the Blockchain Retail Cybersecurity demo page"""
     return render_template(
         'demos/blockchain_security.html',
-        related_paper_id=DEMO_BY_ID['blockchain-security']['paper_id']
+        related_paper_id=get_demo('blockchain-security')['paper_id']
     )
 
 @demos_bp.route('/api/blockchain-simulation', methods=['POST'])
@@ -404,7 +554,7 @@ def carbon_optimizer():
     """Render the AI Carbon Footprint Optimizer demo page"""
     return render_template(
         'demos/carbon_optimizer.html',
-        related_paper_id=DEMO_BY_ID['carbon-optimizer']['paper_id']
+        related_paper_id=get_demo('carbon-optimizer')['paper_id']
     )
 
 @demos_bp.route('/api/carbon-analysis', methods=['POST'])
@@ -463,7 +613,7 @@ def sustainability_matrix():
     """Render the Sustainable Supply Chain Matrix demo"""
     return render_template(
         'demos/sustainability_matrix.html',
-        related_paper_id=DEMO_BY_ID['sustainability-matrix']['paper_id']
+        related_paper_id=get_demo('sustainability-matrix')['paper_id']
     )
 
 @demos_bp.route('/api/matrix-analysis', methods=['POST'])

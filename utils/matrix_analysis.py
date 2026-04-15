@@ -136,6 +136,33 @@ class MatrixModelEngine:
                 'confusion_matrix': cm.tolist()
             }
             
+        rating_rank = {'High': 3, 'Medium': 2, 'Low': 1}
+        supplier_summary = []
+        for supplier, frame in df.groupby('Supplier'):
+            dominant_rating = frame['Sustainability_Rating'].mode().iloc[0]
+            supplier_summary.append({
+                'supplier': supplier,
+                'dominant_rating': dominant_rating,
+                'records': int(len(frame)),
+                'avg_lead_time': float(frame['Lead_Time_Days'].mean()),
+                'avg_defect_rate': float(frame['Defect_Rate'].mean()),
+                'avg_cost_per_unit': float(frame['Cost_Per_Unit'].mean())
+            })
+
+        supplier_summary.sort(key=lambda item: (rating_rank.get(item['dominant_rating'], 0), -item['records']), reverse=True)
+
+        category_summary = []
+        for category, frame in df.groupby('Category'):
+            low_share = float((frame['Sustainability_Rating'] == 'Low').mean() * 100)
+            category_summary.append({
+                'category': category,
+                'low_share': low_share,
+                'avg_lead_time': float(frame['Lead_Time_Days'].mean()),
+                'avg_defect_rate': float(frame['Defect_Rate'].mean())
+            })
+
+        category_summary.sort(key=lambda item: item['low_share'], reverse=True)
+
         return {
             'metrics': results,
             'classes': self.target_names.tolist(),
@@ -144,5 +171,17 @@ class MatrixModelEngine:
                 'train_size': len(X_train),
                 'test_size': len(X_test),
                 'features': list(df.drop('Sustainability_Rating', axis=1).columns)
+            },
+            'portfolio_summary': {
+                'rating_counts': {
+                    'High': int((df['Sustainability_Rating'] == 'High').sum()),
+                    'Medium': int((df['Sustainability_Rating'] == 'Medium').sum()),
+                    'Low': int((df['Sustainability_Rating'] == 'Low').sum())
+                },
+                'avg_lead_time': float(df['Lead_Time_Days'].mean()),
+                'avg_defect_rate': float(df['Defect_Rate'].mean()),
+                'avg_cost_per_unit': float(df['Cost_Per_Unit'].mean()),
+                'top_suppliers': supplier_summary[:6],
+                'priority_categories': category_summary[:5]
             }
         }

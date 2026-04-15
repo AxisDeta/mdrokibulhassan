@@ -1,0 +1,16 @@
+{
+  "last_attempt_at": "2026-04-14T19:07:55.734572+00:00",
+  "last_status": "success",
+  "last_error": null,
+  "updated_at": "2026-04-14T19:07:55.734572+00:00",
+  "last_success_at": "2026-04-14T19:07:55.734572+00:00",
+  "stats": {
+    "publications_found": 27,
+    "publications_added": 0,
+    "publications_updated": 0,
+    "publications_unchanged": 27,
+    "total_citations": 729,
+    "h_index": 14,
+    "i10_index": 20
+  }
+}

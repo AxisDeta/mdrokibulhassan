@@ -150,6 +150,53 @@ class SupplierRiskAnalyzer:
             key=lambda k: results['models'][k]['mae']
         )
         results['best_model'] = best_model_name
+
+        model_lookup = {
+            'Linear Regression': ('lr', True),
+            'Random Forest': ('rf', False),
+            'XGBoost': ('xgb', False),
+            'MLP': ('mlp', True)
+        }
+        selected_key, use_scaled = model_lookup[best_model_name]
+        full_features = self.scaler.transform(X) if use_scaled else X
+        full_predictions = self.models.get('forecasting', {}).get(selected_key)
+        if full_predictions is None:
+            full_predictions = lr if selected_key == 'lr' else rf if selected_key == 'rf' else xgb_model if selected_key == 'xgb' else mlp
+        projected_demand = full_predictions.predict(full_features)
+
+        supplier_view = df[['supplier_id', 'future_demand', 'risk_category', 'lead_time_days', 'delivery_performance']].copy()
+        supplier_view['projected_demand'] = projected_demand
+        supplier_view['priority_score'] = (
+            (df['geopolitical_risk_score'] / 10) * 0.3 +
+            (df['weather_risk_index'] / 10) * 0.2 +
+            df['shipment_anomaly_score'] * 0.2 +
+            ((100 - df['financial_health_score']) / 100) * 0.3
+        ) * projected_demand
+
+        top_suppliers = (
+            supplier_view.sort_values('priority_score', ascending=False)
+            .head(8)
+            .to_dict('records')
+        )
+
+        risk_counts = df['risk_category'].value_counts().to_dict()
+        results['business_view'] = {
+            'projected_total_demand': float(np.sum(projected_demand)),
+            'average_projected_demand': float(np.mean(projected_demand)),
+            'high_risk_suppliers': int(risk_counts.get('High', 0)),
+            'medium_risk_suppliers': int(risk_counts.get('Medium', 0)),
+            'low_risk_suppliers': int(risk_counts.get('Low', 0)),
+            'top_suppliers': [
+                {
+                    'supplier_id': row['supplier_id'],
+                    'risk_category': str(row['risk_category']),
+                    'projected_demand': float(row['projected_demand']),
+                    'lead_time_days': float(row['lead_time_days']),
+                    'delivery_performance': float(row['delivery_performance'])
+                }
+                for row in top_suppliers
+            ]
+        }
         
         # Store models
         self.models['forecasting'] = {
@@ -224,7 +271,20 @@ class SupplierRiskAnalyzer:
             'data': {
                 'features': X.tolist(),
                 'feature_names': feature_cols
-            }
+            },
+            'top_alerts': (
+                df.assign(anomaly_label=anomaly_labels, anomaly_score=anomaly_scores)
+                .loc[lambda frame: frame['anomaly_label'] == 1]
+                .sort_values('anomaly_score')
+                .head(10)[[
+                    'shipment_id',
+                    'price_spike_percentage',
+                    'delivery_delay_days',
+                    'weather_disruption_index',
+                    'geopolitical_event_flag'
+                ]]
+                .to_dict('records')
+            )
         }
         
         self.models['anomaly'] = iso_forest
@@ -294,6 +354,7 @@ class SupplierRiskAnalyzer:
     def detect_fraud(self, df: pd.DataFrame, epochs: int = 20) -> Dict:
         """
         Detect fraudulent transactions using Deep Neural Network
+        Falls back to scikit-learn if TensorFlow is unavailable.
         
         Args:
             df: DataFrame with transaction features
@@ -302,9 +363,15 @@ class SupplierRiskAnalyzer:
         Returns:
             Dictionary with fraud detection results
         """
-        # Lazy import TensorFlow to avoid slow server restarts
-        from tensorflow import keras
-        from tensorflow.keras import layers
+        # Try TensorFlow first, fall back to scikit-learn if unavailable
+        tensorflow_available = False
+        try:
+            from tensorflow import keras
+            from tensorflow.keras import layers
+            tensorflow_available = True
+        except ImportError:
+            # TensorFlow not available, will use scikit-learn fallback
+            pass
         
         # Prepare features
         categorical_cols = ['device_type', 'merchant_category']
@@ -329,8 +396,9 @@ class SupplierRiskAnalyzer:
         y = df_encoded['is_fraud'].values
         
         # Train-test split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+        indices = np.arange(len(df_encoded))
+        X_train, X_test, y_train, y_test, idx_train, idx_test = train_test_split(
+            X, y, indices, test_size=0.2, random_state=42, stratify=y
         )
         
         # Apply SMOTE to balance classes
@@ -342,41 +410,80 @@ class SupplierRiskAnalyzer:
         X_train_scaled = scaler.fit_transform(X_train_balanced)
         X_test_scaled = scaler.transform(X_test)
         
-        # Build Deep Neural Network
-        model = keras.Sequential([
-            layers.Dense(64, activation='relu', input_shape=(X_train_scaled.shape[1],)),
-            layers.Dropout(0.3),
-            layers.Dense(32, activation='relu'),
-            layers.Dropout(0.2),
-            layers.Dense(16, activation='relu'),
-            layers.Dense(1, activation='sigmoid')
-        ])
-        
-        model.compile(
-            optimizer='adam',
-            loss='binary_crossentropy',
-            metrics=['accuracy', keras.metrics.Precision(), keras.metrics.Recall()]
-        )
-        
-        # Train with early stopping
-        early_stop = keras.callbacks.EarlyStopping(
-            monitor='val_loss',
-            patience=5,
-            restore_best_weights=True
-        )
-        
-        history = model.fit(
-            X_train_scaled, y_train_balanced,
-            epochs=epochs,
-            batch_size=32,
-            validation_split=0.2,
-            callbacks=[early_stop],
-            verbose=0
-        )
-        
-        # Predictions
-        y_pred_proba = model.predict(X_test_scaled, verbose=0).flatten()
-        y_pred = (y_pred_proba > 0.5).astype(int)
+        # Use TensorFlow if available, otherwise use scikit-learn
+        if tensorflow_available:
+            # Build Deep Neural Network with TensorFlow
+            model = keras.Sequential([
+                layers.Dense(64, activation='relu', input_shape=(X_train_scaled.shape[1],)),
+                layers.Dropout(0.3),
+                layers.Dense(32, activation='relu'),
+                layers.Dropout(0.2),
+                layers.Dense(16, activation='relu'),
+                layers.Dense(1, activation='sigmoid')
+            ])
+            
+            model.compile(
+                optimizer='adam',
+                loss='binary_crossentropy',
+                metrics=['accuracy', keras.metrics.Precision(), keras.metrics.Recall()]
+            )
+            
+            # Train with early stopping
+            early_stop = keras.callbacks.EarlyStopping(
+                monitor='val_loss',
+                patience=5,
+                restore_best_weights=True
+            )
+            
+            history = model.fit(
+                X_train_scaled, y_train_balanced,
+                epochs=epochs,
+                batch_size=32,
+                validation_split=0.2,
+                callbacks=[early_stop],
+                verbose=0
+            )
+            
+            # Predictions
+            y_pred_proba = model.predict(X_test_scaled, verbose=0).flatten()
+            y_pred = (y_pred_proba > 0.5).astype(int)
+            
+            training_history = {
+                'loss': [float(x) for x in history.history['loss']],
+                'val_loss': [float(x) for x in history.history['val_loss']],
+                'accuracy': [float(x) for x in history.history['accuracy']],
+                'val_accuracy': [float(x) for x in history.history['val_accuracy']]
+            }
+            
+            self.fraud_model = model
+        else:
+            # Fallback: Use scikit-learn MLPClassifier
+            from sklearn.neural_network import MLPClassifier
+            model = MLPClassifier(
+                hidden_layer_sizes=(64, 32, 16),
+                max_iter=epochs,
+                random_state=42,
+                early_stopping=True,
+                validation_fraction=0.2,
+                n_iter_no_change=5,
+                alpha=0.0001
+            )
+            
+            model.fit(X_train_scaled, y_train_balanced)
+            
+            # Predictions
+            y_pred = model.predict(X_test_scaled)
+            y_pred_proba = model.predict_proba(X_test_scaled)[:, 1]
+            
+            # Create mock training history for consistency
+            training_history = {
+                'loss': [float(0)],
+                'val_loss': [float(0)],
+                'accuracy': [float(0)],
+                'val_accuracy': [float(0)]
+            }
+            
+            self.fraud_model = model
         
         # Calculate metrics
         cm = confusion_matrix(y_test, y_pred)
@@ -402,15 +509,18 @@ class SupplierRiskAnalyzer:
                 'y_pred': y_pred.tolist(),
                 'y_pred_proba': y_pred_proba.tolist()
             },
-            'training_history': {
-                'loss': [float(x) for x in history.history['loss']],
-                'val_loss': [float(x) for x in history.history['val_loss']],
-                'accuracy': [float(x) for x in history.history['accuracy']],
-                'val_accuracy': [float(x) for x in history.history['val_accuracy']]
-            }
+            'training_history': training_history
         }
-        
-        self.fraud_model = model
+
+        test_frame = df.iloc[idx_test].copy()
+        test_frame['fraud_probability'] = y_pred_proba
+        test_frame['predicted_fraud'] = y_pred
+        results['top_alerts'] = (
+            test_frame.loc[test_frame['predicted_fraud'] == 1, ['transaction_id', 'transaction_amount', 'device_type', 'merchant_category', 'fraud_probability']]
+            .sort_values('fraud_probability', ascending=False)
+            .head(10)
+            .to_dict('records')
+        )
         
         return results
 

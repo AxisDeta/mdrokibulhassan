@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Research Demos - MD ROKIBUL HASAN{% endblock %}
+{% block title %}Supply Chain Intelligence - MD ROKIBUL HASAN{% endblock %}
 
 {% block content %}
-<!-- Demos Header -->
+<!-- Intelligence Header -->
 <section class="demos-header">
     <div class="container">
-        <h1 class="demos-title animate-fade-in">Interactive Research Demos</h1>
+        <h1 class="demos-title animate-fade-in">Interactive Supply Chain Intelligence</h1>
         <p class="demos-subtitle animate-fade-in-delay-1">
-            Explore practical applications of supply chain research through interactive tools and simulations
+            Explore practical supply chain intelligence tools, models, and simulations grounded in applied research
         </p>
     </div>
 </section>
 
-<!-- Demos Grid -->
+<!-- Intelligence Grid -->
 <section class="demos-section">
     <div class="container">
         <div class="demos-grid">
@@ -38,7 +38,7 @@
                 <div class="demo-footer">
                     {% if demo.status == 'active' %}
                     <a href="{{ url_for('demos.' + demo.id.replace('-', '_')) }}" class="btn btn-primary btn-demo">
-                        <i class="fas fa-play"></i> Try Demo
+                        <i class="fas fa-play"></i> Open Tool
                     </a>
                     {% else %}
                     <span class="btn btn-secondary btn-demo disabled">
@@ -46,9 +46,15 @@
                     </span>
                     {% endif %}
 
+                    {% if demo.has_research_link %}
                     <a href="{{ url_for('publication_detail', pub_id=demo.paper_id) }}" class="btn-link">
                         <i class="fas fa-file-alt"></i> View Research
                     </a>
+                    {% else %}
+                    <span class="btn-link btn-link-disabled">
+                        <i class="fas fa-hourglass-half"></i> Research Brief Coming Soon
+                    </span>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -189,6 +195,12 @@
 
     .btn-link:hover {
         color: var(--primary-hover);
+    }
+
+    .btn-link-disabled {
+        color: var(--text-tertiary);
+        cursor: default;
+        pointer-events: none;
     }
 
     @media (max-width: 768px) {
