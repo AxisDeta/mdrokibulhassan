@@ -562,39 +562,28 @@ def create_app(config_name='development'):
     app.register_blueprint(demos_bp)
     
     return app
+
 app = create_app()
 
+# Initialize database on app startup (works for both local and production)
+with app.app_context():
+    try:
+        db.create_all()
+        
+        # Create default admin user if not exists
+        if not User.query.filter_by(username=app.config['ADMIN_USERNAME']).first():
+            admin = User(username=app.config['ADMIN_USERNAME'])
+            admin.set_password(app.config['ADMIN_PASSWORD'])
+            db.session.add(admin)
+            db.session.commit()
+            print(f"Created admin user: {app.config['ADMIN_USERNAME']}")
+    except (OperationalError, SQLAlchemyError) as e:
+        print(f"WARNING: Database connection failed during startup. The app will start, but database features will return 503 errors.\nError: {e}")
+
 if __name__ == '__main__':
-    app.run()
-    
-    with app.app_context():
-        try:
-            db.create_all()
-            
-            # Create default admin user if not exists
-            if not User.query.filter_by(username=app.config['ADMIN_USERNAME']).first():
-                admin = User(username=app.config['ADMIN_USERNAME'])
-                admin.set_password(app.config['ADMIN_PASSWORD'])
-                db.session.add(admin)
-                db.session.commit()
-                print(f"Created admin user: {app.config['ADMIN_USERNAME']}")
-        except (OperationalError, SQLAlchemyError) as e:
-            print(f"WARNING: Database connection failed during startup. The app will start, but database features will return 503 errors.\nError: {e}")
-    
-    # Configure Flask to exclude site-packages from file watching
-    # This prevents TensorFlow imports from triggering infinite restarts
-    import sys
-    exclude_patterns = [
-        '*site-packages*',
-        '*tensorflow*',
-        '*keras*',
-        '*.pyc',
-        '*__pycache__*'
-    ]
-    
     port = int(os.environ.get('PORT', 5000))
-    app.run( 
-        host='0.0.0.0', 
+    app.run(
+        host='0.0.0.0',
         port=port,
         extra_files=[],  # Don't watch extra files
         reloader_type='stat'  # Use stat reloader instead of watchdog (more stable)
